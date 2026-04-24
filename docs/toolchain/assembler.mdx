@@ -1,0 +1,112 @@
+---
+title: Assembler
+description: helix-asm — compile .hx source to a DNA string.
+---
+
+## Overview
+
+`helix-asm` takes a `.hx` assembly program and produces a DNA nucleotide string ready for synthesis or simulation.
+
+## Pipeline
+
+```
+.hx source
+    │
+    ▼ Parser         (helix_asm::parser)
+SourceProgram   (AST with raw mnemonics, labels, data)
+    │
+    ▼ Resolver       (helix_asm::resolver)
+ResolvedProgram (branch offsets resolved to i8 values)
+    │
+    ▼ Emitter        (helix_asm::emitter)
+AssemblyOutput  (raw_codons, dna, entry pc, data segment)
+```
+
+## AssemblyOutput
+
+```rust
+pub struct AssemblyOutput {
+    pub raw_codons: Vec<Codon>,   // instruction codons, no ECC
+    pub dna: String,               // full ACGT string (with ECC)
+    pub program: ResolvedProgram,  // labels, data, entry
+}
+```
+
+- `raw_codons` — for the VM when you want to skip ECC (testing, simulation)
+- `dna` — the string you'd send to a DNA synthesis vendor
+- `program.entry` — the instruction index to set `cpu.pc` to
+
+## Rust API
+
+```rust
+use helix_asm::Assembler;
+use helix_ecc::EccConfig;
+
+let cfg = EccConfig { tmr: false, block_size: 8 };
+let asm = Assembler::new(cfg, /* verbose */ false);
+
+let src = r#"
+.program "example"
+.version 1
+.text
+.entry main
+main:
+    IMML R1, 42
+    HALT
+"#;
+
+let out = asm.assemble(src)?;
+println!("{}", out.dna);
+```
+
+## Loading into the VM
+
+```rust
+use helix_vm::{Cpu, Memory, ProgramLoader};
+
+// From raw codons (skips ECC decode)
+let prog = ProgramLoader::from_raw_codons(&out.raw_codons)?;
+
+// From DNA string (full ECC decode)
+let prog = ProgramLoader::new(cfg).from_dna_string(&out.dna)?;
+
+let mut cpu = Cpu::new(Memory::new());
+cpu.pc = out.program.entry;
+cpu.run(&prog.instructions)?;
+```
+
+## Data Section Loading
+
+If your program has a `.data` section, load it into memory before running:
+
+```rust
+let mut mem = Memory::new();
+mem.load_data(&out.program.data);   // loads at address 0
+let mut cpu = Cpu::new(mem);
+cpu.pc = out.program.entry;
+cpu.run(&prog.instructions)?;
+```
+
+## Error Types
+
+```rust
+pub enum AssembleError {
+    Parse(ParseError),
+    Resolve(ResolveError),
+}
+
+pub enum ParseError {
+    UnknownMnemonic(String),
+    InvalidOperand(String),
+    // ...
+}
+
+pub enum ResolveError {
+    UndefinedLabel(String),
+    OffsetOutOfRange { label: String, offset: i32 },
+}
+```
+
+## Verbose Mode
+
+Pass `true` as the second argument to `Assembler::new` for debug output (instruction list, codon values, DNA length).

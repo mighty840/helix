@@ -1,0 +1,21 @@
+[package]
+name = "helix-vm"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "helix-vm"
+path = "src/main.rs"
+
+[lib]
+name = "helix_vm"
+path = "src/lib.rs"
+
+[dependencies]
+thiserror.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+helix-isa.workspace = true
+helix-ecc.workspace = true

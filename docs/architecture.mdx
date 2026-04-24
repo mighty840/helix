@@ -1,0 +1,99 @@
+---
+title: Architecture
+description: End-to-end system design of the Helix DNA storage and execution platform.
+---
+
+## Layers
+
+Helix is a layered system. Each layer has a single responsibility and hands off to the next via a well-defined interface.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  .hx source  (human-readable assembly)                    │
+├──────────────────────────────────────────────────────────┤
+│  helix-asm   parse → resolve labels → emit codons         │
+├──────────────────────────────────────────────────────────┤
+│  helix-bio   GC / homopolymer / hairpin optimizer         │
+├──────────────────────────────────────────────────────────┤
+│  helix-ecc   SYNC + Reed-Solomon + TMR → DNA string       │
+├──────────────────────────────────────────────────────────┤
+│  DNA synthesis / storage / sequencing  (physical layer)   │
+├──────────────────────────────────────────────────────────┤
+│  helix-ecc   TMR vote + RS correct + SYNC resync          │
+├──────────────────────────────────────────────────────────┤
+│  helix-vm    decode instruction codons + execute           │
+└──────────────────────────────────────────────────────────┘
+```
+
+## Codon Encoding
+
+The fundamental unit is the **codon**: 3 nucleotides = 6 bits = 64 possible values.
+
+```
+A = 00   C = 01   G = 10   T = 11
+
+GCA = 10 01 00 = 0x24 = 36
+```
+
+One instruction = **4 codons = 24 bits = 12 nucleotides**.
+
+## Codon Space Partitioning
+
+| Range | Count | Purpose |
+|-------|-------|---------|
+| 0x00–0x1F | 32 | Opcodes |
+| 0x20–0x2F | 16 | Register refs / addressing modes |
+| 0x30–0x37 | 8 | Control codons (SYNC, ECCP, Trap) |
+| 0x38–0x3F | 8 | Reserved / padding (NOP synonyms) |
+
+Opcodes 0x00–0x0F each have a **synonymous codon** used by the bio-optimizer to satisfy GC and homopolymer constraints without changing program semantics.
+
+## Error Correction Stack
+
+Errors enter the pipeline at the physical layer (synthesis, storage, sequencing). Helix defends with four redundant layers:
+
+| Layer | Mechanism | Corrects |
+|-------|-----------|----------|
+| Codon degeneracy | Synonymous opcodes | Single codon semantics |
+| SYNC markers | 4-codon pattern every 8 instrs | Frame loss / insertion-deletion drift |
+| Reed-Solomon | RS(10,8) over GF(2⁶) | 1 symbol error per 8-instruction block |
+| TMR | Three copies + majority vote | Burst errors in one copy |
+
+## Data Flow (encode side)
+
+```
+instrs: Vec<Codon>
+   │
+   │ EccEncoder::encode()
+   │   1. chunk into blocks of 8 instructions (32 codons)
+   │   2. prepend 4-codon SYNC to each block
+   │   3. compute RS parity over 8 opcode symbols
+   │   4. append 4-codon ECCP (parity stored here)
+   │   [5. if TMR: replicate 3× with SECTION_SEP between copies]
+   │
+   ▼
+DNA string: "ACGTGCATCG..."
+```
+
+## Data Flow (decode side)
+
+```
+DNA string
+   │
+   │ EccDecoder::decode()
+   │   1. if TMR: split at SECTION_SEP, majority-vote codon-by-codon
+   │   2. scan for SYNC markers, realign frame
+   │   3. for each block: extract opcode symbols + stored parity
+   │   4. RS decode / correct up to 1 symbol error
+   │   5. reconstruct instruction codons with corrected opcodes
+   │
+   ▼
+instrs: Vec<Codon>  →  Cpu::run()
+```
+
+## Design Constraints
+
+- **16-bit registers** — keeps instruction encoding within 24 bits (4 codons), minimising DNA per instruction.
+- **8 registers** — 3 bits per register field; R0 hardwired zero simplifies arithmetic and constant loading.
+- **Fixed-width instructions** — no variable-length encoding; frame loss is recoverable via SYNC.
+- **GF(2⁶) Reed-Solomon** — the 6-bit codon is a natural GF element; no padding required.

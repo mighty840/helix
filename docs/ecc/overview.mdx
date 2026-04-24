@@ -1,0 +1,120 @@
+---
+title: Error Correction
+description: Four-layer ECC stack protecting DNA-stored programs from synthesis, storage, and sequencing errors.
+---
+
+## Why Four Layers?
+
+DNA storage introduces errors at every physical step:
+
+| Step | Typical error rate | Error type |
+|------|-------------------|-----------| 
+| Synthesis | 0.1–1% per base | Substitution, deletion |
+| Storage (wet) | 0.01–0.1%/year | Substitution |
+| Sequencing (Illumina) | 0.1–0.5% | Substitution |
+| Sequencing (nanopore) | 1–5% | Substitution + indels |
+
+No single mechanism handles all of these. Helix stacks four layers.
+
+## Layer 1: Codon Degeneracy
+
+Opcodes 0x00–0x0F each have a **synonymous codon** — a second 6-bit value that decodes identically.
+
+```
+Opcode ADD = 0x00  →  synonym 0x20
+Both decode as ADD; the bio-optimizer picks whichever satisfies GC/homopolymer constraints.
+```
+
+This is zero-cost: no extra DNA, no extra computation. The mapping is defined in `helix-isa/src/synonyms.rs`.
+
+## Layer 2: SYNC Markers
+
+A 4-codon SYNC pattern (`[0x1D, 0x2A, 0x15, 0x2A]`) is inserted before every 8-instruction block.
+
+```
+[SYNC][instr0][instr1]...[instr7][ECCP][SYNC][instr8]...
+ 4      4       4           4     4      4
+```
+
+**What it protects against:** insertion/deletion errors that shift the codon frame. Without SYNC, a single deleted nucleotide corrupts every subsequent instruction. With SYNC, the decoder re-frames at the next SYNC marker, limiting damage to one block.
+
+The SYNC pattern is chosen to be distant from all valid instruction codons in Hamming space.
+
+## Layer 3: Reed-Solomon
+
+Each 8-instruction block is protected by an RS(10,8) code over GF(2⁶).
+
+```
+Data:   8 opcode symbols (one per instruction, the first codon of each)
+Parity: 2 parity symbols stored in a 4-codon ECCP instruction
+Block:  [d0 d1 d2 d3 d4 d5 d6 d7 | p0 p1]
+```
+
+**Capability:** corrects **1 symbol error** per block (t = 1).
+
+<Note>
+RS protects only the **opcode codon** of each instruction (the codon that determines what the instruction does). Operand codons are not RS-protected — operand errors would require a wider RS code, increasing DNA length.
+</Note>
+
+### Why GF(2⁶)?
+
+A codon is 6 bits — exactly a GF(2⁶) element. No padding, no waste. The GF tables (`helix-isa/src/gf.rs`) implement the field arithmetic.
+
+## Layer 4: TMR (Triple Modular Redundancy)
+
+When `tmr: true`, the encoder writes **three copies** of the full encoded stream, separated by `SECTION_SEP` markers (codon `0x38`).
+
+```
+[copy1][0x38][copy2][0x38][copy3]
+```
+
+The decoder splits the stream, aligns the three copies codon-by-codon, and applies **majority vote**:
+
+```
+majority(a, b, c):
+  if a == b:  return a   (2-of-3 agreement)
+  if a == c:  return a
+  if b == c:  return b
+  else:       return a   (no majority; take first)
+```
+
+**What it protects against:** burst errors that damage one entire copy while leaving the others intact — the most common failure mode in long-term storage.
+
+## Combining Layers
+
+You can use RS alone (cheaper, less DNA) or RS + TMR (more robust, 3× DNA):
+
+```rust
+// RS only
+let cfg = EccConfig { tmr: false, block_size: 8 };
+
+// RS + TMR
+let cfg = EccConfig { tmr: true, block_size: 8 };
+```
+
+Typical strategy:
+- **Short-term storage (\<5 years):** RS only
+- **Long-term archival (decades):** RS + TMR
+
+## API
+
+```rust
+use helix_ecc::{EccConfig, EccEncoder, EccDecoder};
+
+let cfg = EccConfig { tmr: true, block_size: 8 };
+
+// Encode
+let dna_codons: Vec<Codon> = EccEncoder::new(cfg).encode(&instruction_codons);
+
+// Decode (corrects errors)
+let recovered: Vec<Codon> = EccDecoder::new(cfg).decode(&dna_codons)?;
+```
+
+## Block Size
+
+`block_size` controls how many instructions per RS block (default: 8).
+
+- Larger blocks → fewer SYNC/ECCP headers → denser DNA → but RS covers more codons per correction
+- Smaller blocks → more granular recovery, but higher overhead per instruction
+
+8 is a reasonable default for typical algorithm programs (50–200 instructions).

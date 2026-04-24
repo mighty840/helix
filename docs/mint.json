@@ -1,0 +1,73 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Helix",
+  "description": "DNA-encoded algorithm storage and execution system",
+  "colors": {
+    "primary": "#16a34a",
+    "light": "#4ade80",
+    "dark": "#15803d",
+    "anchors": {
+      "from": "#16a34a",
+      "to": "#4ade80"
+    }
+  },
+  "topbarCtaButton": {
+    "name": "GitHub",
+    "url": "https://github.com/mighty840/helix"
+  },
+  "anchors": [
+    {
+      "name": "Specification",
+      "icon": "book",
+      "url": "https://github.com/mighty840/helix/blob/main/SPEC.md"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "architecture"
+      ]
+    },
+    {
+      "group": "ISA Reference",
+      "pages": [
+        "isa/overview",
+        "isa/instructions",
+        "isa/assembly"
+      ]
+    },
+    {
+      "group": "Error Correction",
+      "pages": [
+        "ecc/overview"
+      ]
+    },
+    {
+      "group": "Bio Safety",
+      "pages": [
+        "bio/overview"
+      ]
+    },
+    {
+      "group": "Toolchain",
+      "pages": [
+        "toolchain/assembler",
+        "toolchain/vm",
+        "toolchain/simulator"
+      ]
+    },
+    {
+      "group": "Examples",
+      "pages": [
+        "examples/algorithms",
+        "examples/weights"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/mighty840/helix"
+  }
+}

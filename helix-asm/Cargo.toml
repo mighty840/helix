@@ -1,0 +1,21 @@
+[package]
+name = "helix-asm"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "helix-asm"
+path = "src/main.rs"
+
+[dependencies]
+thiserror.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+helix-isa.workspace = true
+helix-ecc.workspace = true
+helix-bio.workspace = true
+
+[dev-dependencies]
+helix-vm = { path = "../helix-vm" }
