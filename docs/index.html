@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helix — Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Special+Elite&family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#f5f0e2;--paper-side:#ede5ce;--paper-line:rgba(178,155,108,0.30);
+  --ink:#1c1714;--ink-body:#4a4035;--pencil:#8b7b6e;--pencil-lt:#b0a090;
+  --rust:#b71c1c;--navy:#1a3a6e;--forest:#1a5c2e;--amber:#924d0a;
+  --tape-lemon:#fef08a;--tape-sky:#bae6fd;--tape-rose:#fecdd3;
+  --tape-sage:#bbf7d0;--tape-lavender:#ddd6fe;--tape-peach:#fed7aa;
+  --shadow-md:4px 8px 32px rgba(28,23,20,0.18),1px 2px 6px rgba(28,23,20,0.10);
+}
+html,body{height:100vh;overflow:hidden}
+body{
+  background-color:#b09070;
+  background-image:
+    repeating-linear-gradient(-48deg,transparent,transparent 18px,rgba(0,0,0,0.025) 18px,rgba(0,0,0,0.025) 19px),
+    repeating-linear-gradient(42deg,transparent,transparent 24px,rgba(0,0,0,0.015) 24px,rgba(0,0,0,0.015) 25px);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:24px 16px;font-family:'Kalam',cursive;color:var(--ink);
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='280' height='280' filter='url(%23g)' opacity='0.09'/%3E%3C/svg%3E");
+  opacity:.55;
+}
+.notebook{
+  display:flex;width:100%;max-width:1180px;height:calc(100vh - 48px);
+  box-shadow:var(--shadow-md),6px 12px 48px rgba(28,23,20,0.22);
+  animation:drop-in 0.7s cubic-bezier(0.34,1.45,0.64,1) both;
+}
+@keyframes drop-in{from{opacity:0;transform:translateY(-18px) rotate(-0.4deg)}to{opacity:1;transform:none}}
+
+/* SIDEBAR */
+.sidebar{
+  width:256px;min-width:256px;background-color:var(--paper-side);
+  background-image:
+    repeating-linear-gradient(to bottom,transparent,transparent 27px,var(--paper-line) 27px,var(--paper-line) 28px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)' opacity='0.07'/%3E%3C/svg%3E");
+  border-right:2px solid rgba(100,78,50,0.22);
+  position:relative;flex-shrink:0;overflow-y:auto;
+}
+.sidebar::before{
+  content:'';position:absolute;right:-1px;top:0;bottom:0;width:2px;
+  background:repeating-linear-gradient(to bottom,transparent,transparent 18px,rgba(100,78,50,0.3) 18px,rgba(100,78,50,0.3) 22px);
+}
+.sidebar-head{padding:28px 22px 16px;border-bottom:1px dashed rgba(100,78,50,0.32)}
+.s-logo-lockup{display:flex;align-items:center;gap:12px}
+.s-logo-mark{flex-shrink:0;filter:drop-shadow(1px 2px 3px rgba(28,23,20,0.14))}
+.s-logo-text{
+  font-family:'Caveat',cursive;font-size:36px;font-weight:700;
+  color:var(--ink);line-height:1;position:relative;
+}
+.s-logo-text::after{
+  content:'';display:block;width:100%;height:5px;margin-top:2px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 6'%3E%3Cpath d='M0 3 Q5 1 10 3 Q15 5 20 3 Q25 1 30 3 Q35 5 40 3 Q45 1 50 3 Q55 5 60 3 Q65 1 70 3 Q75 5 80 3' stroke='%23b71c1c' stroke-width='2.2' fill='none'/%3E%3C/svg%3E");
+  background-size:80px 6px;background-repeat:repeat-x;opacity:.75;
+}
+.s-tagline{font-family:'Kalam',cursive;font-size:11px;color:var(--pencil);margin-top:6px;line-height:1.5}
+.nav-grp{padding:10px 0 4px;border-bottom:1px dashed rgba(100,78,50,0.22)}
+.nav-grp:last-child{border-bottom:none}
+.nav-grp-lbl{
+  font-family:'Kalam',cursive;font-size:10px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--pencil);padding:0 22px 5px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:4px 22px;
+  font-family:'Caveat',cursive;font-size:18px;color:var(--ink-body);
+  cursor:pointer;position:relative;transition:padding-left .14s,color .14s;user-select:none;
+}
+.nav-item:hover{padding-left:28px;color:var(--ink)}
+.nav-item.active{color:var(--ink);font-weight:600}
+.nav-item.active::before{content:'↳';position:absolute;left:7px;font-size:13px;color:var(--rust);line-height:1}
+.wtape{width:22px;height:12px;border-radius:3px;flex-shrink:0;transform:rotate(-1.5deg);box-shadow:1px 1px 3px rgba(0,0,0,0.09);opacity:.88}
+.s-coffee{
+  position:absolute;bottom:60px;right:24px;width:66px;height:62px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at 38% 32%,transparent 44%,rgba(110,68,26,.08) 54%,rgba(110,68,26,.24) 63%,rgba(110,68,26,.14) 70%,rgba(110,68,26,.04) 76%,transparent 88%);
+  transform:rotate(10deg) scaleX(.88);
+}
+.s-doodle{position:absolute;bottom:20px;left:22px;font-family:'Caveat',cursive;font-size:11px;color:var(--pencil-lt);transform:rotate(-3deg);opacity:.7}
+
+/* MAIN PAGE */
+.page{
+  flex:1;overflow-y:auto;
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(to right,transparent 68px,rgba(183,28,28,.22) 68px,rgba(183,28,28,.22) 70px,transparent 70px),
+    repeating-linear-gradient(to bottom,transparent,transparent 27px,var(--paper-line) 27px,var(--paper-line) 28px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.76' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='280' height='280' filter='url(%23g)' opacity='0.07'/%3E%3C/svg%3E");
+  position:relative;
+}
+.page::after{
+  content:'';position:sticky;top:0;float:right;
+  width:0;height:0;border-style:solid;border-width:0 52px 52px 0;
+  border-color:transparent #b09070 transparent transparent;
+  filter:drop-shadow(-2px 2px 3px rgba(0,0,0,0.18));pointer-events:none;
+}
+
+/* DOC PAGE SWITCHING */
+.doc-page{display:none}
+.doc-page.active{display:block;animation:fadeup .4s ease both}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* HERO */
+.hero{padding:40px 88px 28px;position:relative;min-height:260px}
+.hero-coffee{
+  position:absolute;top:24px;right:110px;width:86px;height:80px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at 35% 30%,transparent 48%,rgba(110,68,26,.07) 57%,rgba(110,68,26,.22) 65%,rgba(110,68,26,.12) 72%,rgba(110,68,26,.03) 78%,transparent 90%);
+  transform:rotate(-8deg) scaleY(.82);
+}
+.hero-stamp{
+  position:absolute;top:22px;right:56px;width:74px;height:74px;
+  border:3.5px solid rgba(183,28,28,.38);border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transform:rotate(-10deg);font-family:'Kalam',cursive;font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.07em;color:rgba(183,28,28,.44);line-height:1.35;text-align:center;pointer-events:none;
+}
+.hero-margin{
+  position:absolute;left:16px;top:80px;font-family:'Caveat',cursive;font-size:11px;
+  color:var(--pencil);writing-mode:vertical-rl;transform:rotate(180deg);line-height:1.4;opacity:.7;
+}
+.hero-logo-mark{display:inline-block;margin-bottom:12px;filter:drop-shadow(2px 3px 6px rgba(28,23,20,0.16));animation:fadeup .5s ease both}
+.hero-title{
+  font-family:'Caveat',cursive;font-size:88px;font-weight:700;line-height:.9;
+  color:var(--ink);letter-spacing:-.02em;position:relative;z-index:2;animation:fadeup .6s ease both;
+}
+.hero-title .accent{color:var(--rust)}
+.title-line{display:block;margin-top:4px;margin-left:4px}
+.hero-sub{font-family:'Kalam',cursive;font-size:15px;color:var(--pencil);margin-top:12px;max-width:420px;line-height:1.75;animation:fadeup .6s .12s ease both}
+.hero-pills{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;animation:fadeup .6s .22s ease both}
+.pill{
+  font-family:'Special Elite',cursive;font-size:11px;background:rgba(255,255,255,.55);
+  border:1.5px solid rgba(100,78,50,.28);border-radius:3px;padding:3px 10px;
+  color:var(--ink-body);transform:rotate(-.5deg);box-shadow:1px 1px 3px rgba(0,0,0,.06);
+}
+.hero-dna{position:absolute;right:148px;top:16px;opacity:.62;animation:fadeup .7s .08s ease both}
+
+/* DOC HEADER (non-intro pages) */
+.doc-header{padding:28px 88px 16px;border-bottom:1px dashed rgba(100,78,50,.28);position:relative}
+.doc-header-title{font-family:'Caveat',cursive;font-size:48px;font-weight:700;color:var(--ink);line-height:1}
+.doc-header-crumb{
+  font-family:'Kalam',cursive;font-size:11.5px;color:var(--pencil);margin-top:5px;font-style:italic;
+}
+
+/* TORN DIVIDER */
+.torn{width:100%;height:28px;overflow:hidden}
+.torn svg{width:100%;height:100%;display:block}
+
+/* DOC CONTENT */
+.doc{padding:16px 88px 56px}
+.doc-section{margin-bottom:44px;position:relative}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
+.sec-title{font-family:'Caveat',cursive;font-size:34px;font-weight:700;color:var(--ink);position:relative;line-height:1}
+.sec-title::after{
+  content:'';position:absolute;bottom:-6px;left:0;right:0;height:4px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 6'%3E%3Cpath d='M0 3 Q9 1 18 3 Q27 5 36 3 Q45 1 54 3 Q63 5 72 3 Q81 1 90 3 Q99 5 108 3 Q117 1 126 3 Q135 5 144 3 Q153 1 162 3 Q171 5 180 3' stroke='%231c1714' stroke-width='1.4' fill='none' opacity='0.45'/%3E%3C/svg%3E");
+  background-repeat:repeat-x;background-size:180px 6px;
+}
+.sec-num{font-family:'Kalam',cursive;font-size:11px;color:var(--pencil-lt);font-style:italic;padding-top:5px}
+.margin-note{
+  position:absolute;right:-12px;font-family:'Caveat',cursive;font-size:12px;
+  color:var(--navy);width:110px;line-height:1.5;transform:rotate(1.5deg);
+  border-left:2px solid rgba(26,58,110,.4);padding-left:7px;
+}
+.margin-note.green{color:var(--forest);border-left-color:rgba(26,92,46,.4)}
+.margin-note.pencil{color:var(--pencil);border-left-color:rgba(139,123,110,.4)}
+.body-text{font-family:'Kalam',cursive;font-size:14.5px;line-height:1.9;color:var(--ink-body);max-width:600px}
+.body-text p+p{margin-top:9px}
+.body-text em{font-style:italic;color:var(--ink)}
+.body-text strong{font-weight:700;color:var(--ink)}
+.body-text code{font-family:'Special Elite',cursive;font-size:12px;background:rgba(255,255,255,.55);border:1px solid rgba(100,78,50,.22);padding:1px 5px;border-radius:2px}
+.body-text ul{padding-left:22px;margin-top:6px}
+.body-text li{margin-bottom:4px}
+.callout{
+  background:#fefce8;border-left:4px solid #d97706;padding:13px 18px;margin:16px 0;
+  font-family:'Kalam',cursive;font-size:13.5px;line-height:1.65;color:#78350f;
+  max-width:560px;box-shadow:2px 4px 10px rgba(0,0,0,.09);transform:rotate(-.4deg);position:relative;
+}
+.callout strong{color:#92400e}
+.callout::before{content:'✎ Note';display:block;font-family:'Caveat',cursive;font-size:16px;font-weight:700;color:#b45309;margin-bottom:4px}
+.callout.tip::before{content:'✦ Tip';color:#047857}
+.callout.tip{background:#f0fdf4;border-left-color:#10b981;color:#064e3b}
+.callout.warn::before{content:'⚠ Warning';color:#991b1b}
+.callout.warn{background:#fef2f2;border-left-color:#ef4444;color:#7f1d1d}
+.pipeline-wrap{margin:18px 0 6px;position:relative}
+.pipeline-cap{font-family:'Kalam',cursive;font-size:11px;color:var(--pencil);font-style:italic;text-align:center;margin-top:8px}
+.code-block{
+  background:#faf3d6;border:1.8px solid rgba(120,95,55,.38);padding:32px 22px 20px;
+  font-family:'Special Elite',cursive;font-size:12.5px;line-height:2;color:var(--ink);
+  max-width:600px;position:relative;
+  box-shadow:3px 3px 0 rgba(120,95,55,.10),inset 0 0 50px rgba(220,190,100,.06);
+  transform:rotate(.3deg);margin:18px 0;overflow:hidden;
+}
+.code-block::before{content:'';position:absolute;top:0;left:0;right:0;height:26px;background:rgba(120,95,55,.09);border-bottom:1px solid rgba(120,95,55,.22)}
+.code-block::after{content:'';position:absolute;top:0;bottom:0;left:42px;width:1px;background:rgba(183,28,28,.18)}
+.code-fname{position:absolute;top:6px;left:12px;font-family:'Kalam',cursive;font-size:10px;color:var(--pencil);font-style:italic}
+pre{margin:0;white-space:pre;overflow-x:auto}
+.ck{color:var(--navy)} .cc{color:var(--pencil);font-style:italic} .cs{color:var(--forest)} .cn{color:var(--amber)}
+.sketch-table{border-collapse:collapse;font-family:'Kalam',cursive;font-size:14px;color:var(--ink-body);max-width:580px;margin-top:16px}
+.sketch-table th{font-family:'Caveat',cursive;font-size:17px;font-weight:700;color:var(--ink);text-align:left;padding:6px 14px;border-bottom:2px solid rgba(28,23,20,.28)}
+.sketch-table td{padding:6px 14px;border-bottom:1px dashed rgba(120,95,55,.30)}
+.sketch-table tr:nth-child(even) td{background:rgba(255,255,255,.28)}
+.reg-label{font-family:'Special Elite',cursive;font-size:12.5px;color:var(--navy)}
+.reg-zero{color:var(--rust)}
+.mono{font-family:'Special Elite',cursive;font-size:12px;color:var(--navy)}
+.tag-r{font-family:'Kalam',cursive;font-size:11px;color:var(--forest);background:rgba(26,92,46,.1);border-radius:2px;padding:1px 5px}
+.tag-i{font-family:'Kalam',cursive;font-size:11px;color:var(--navy);background:rgba(26,58,110,.1);border-radius:2px;padding:1px 5px}
+.ecc-layers{
+  position:absolute;right:-8px;top:10px;width:118px;background:rgba(255,255,255,.7);
+  border:1.5px solid rgba(26,58,110,.25);padding:10px 11px;transform:rotate(1.2deg);box-shadow:2px 3px 8px rgba(0,0,0,.08);
+}
+.ecc-layers h5{font-family:'Caveat',cursive;font-size:14px;color:var(--navy);border-bottom:1px solid rgba(26,58,110,.2);padding-bottom:4px;margin-bottom:6px}
+.ecc-layer-item{font-family:'Kalam',cursive;font-size:10.5px;color:var(--pencil);line-height:1.7}
+.ecc-layer-item span{font-family:'Special Elite',cursive;font-size:10px;color:var(--navy)}
+.page-footer{
+  padding:12px 88px 16px;border-top:1px dashed rgba(120,95,55,.32);
+  display:flex;justify-content:space-between;font-family:'Kalam',cursive;
+  font-size:11px;color:var(--pencil-lt);font-style:italic;
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;overflow:hidden">
+  <defs>
+    <filter id="sk1"><feTurbulence type="turbulence" baseFrequency="0.022" numOctaves="3" result="n" seed="7"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2" xChannelSelector="R" yChannelSelector="G"/></filter>
+    <filter id="sk2"><feTurbulence type="turbulence" baseFrequency="0.04" numOctaves="2" result="n" seed="13"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+    <filter id="box-sk"><feTurbulence type="turbulence" baseFrequency="0.020" numOctaves="3" result="n" seed="9"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.0" xChannelSelector="R" yChannelSelector="G"/></filter>
+  </defs>
+</svg>
+
+<div class="notebook">
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<nav class="sidebar">
+  <div class="sidebar-head">
+    <div class="s-logo-lockup">
+      <svg class="s-logo-mark" viewBox="0 0 80 80" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="lsk"><feTurbulence type="turbulence" baseFrequency="0.055" numOctaves="2" result="n" seed="4"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.3" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <clipPath id="lclip"><circle cx="40" cy="40" r="34"/></clipPath>
+        </defs>
+        <circle cx="40" cy="40" r="35" fill="#f5f0e2" filter="url(#lsk)"/>
+        <g clip-path="url(#lclip)" stroke-linecap="round" fill="none">
+          <path d="M27 5 C15 17,55 29,55 40 C55 51,15 63,27 75" stroke="#1c1714" stroke-width="2.4"/>
+          <path d="M53 5 C65 17,25 29,25 40 C25 51,65 63,53 75" stroke="#b71c1c" stroke-width="2.4"/>
+          <line x1="27" y1="14" x2="53" y2="14" stroke="#8b7b6e" stroke-width="1.1" stroke-dasharray="3,2.5"/>
+          <line x1="24" y1="26" x2="56" y2="26" stroke="#8b7b6e" stroke-width="1.1" stroke-dasharray="3,2.5"/>
+          <line x1="25" y1="39" x2="55" y2="39" stroke="#8b7b6e" stroke-width="1.2" stroke-dasharray="3,2"/>
+          <line x1="25" y1="41" x2="55" y2="41" stroke="#8b7b6e" stroke-width="1.2" stroke-dasharray="3,2"/>
+          <line x1="24" y1="54" x2="56" y2="54" stroke="#8b7b6e" stroke-width="1.1" stroke-dasharray="3,2.5"/>
+          <line x1="27" y1="66" x2="53" y2="66" stroke="#8b7b6e" stroke-width="1.1" stroke-dasharray="3,2.5"/>
+        </g>
+        <circle cx="40" cy="40" r="36" fill="none" stroke="#1c1714" stroke-width="2.5" filter="url(#lsk)"/>
+        <circle cx="40" cy="40" r="31" fill="none" stroke="rgba(28,23,20,0.18)" stroke-width="0.8" filter="url(#lsk)"/>
+      </svg>
+      <div>
+        <div class="s-logo-text">Helix</div>
+        <div class="s-tagline">DNA-Encoded<br>Algorithm Storage</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Getting Started</div>
+    <div class="nav-item active" data-page="introduction"><span class="wtape" style="background:var(--tape-lemon)"></span>Introduction</div>
+    <div class="nav-item" data-page="quickstart"><span class="wtape" style="background:var(--tape-lemon)"></span>Quickstart</div>
+    <div class="nav-item" data-page="architecture"><span class="wtape" style="background:var(--tape-lemon)"></span>Architecture</div>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">ISA Reference</div>
+    <div class="nav-item" data-page="isa-overview"><span class="wtape" style="background:var(--tape-sky)"></span>Overview</div>
+    <div class="nav-item" data-page="isa-instructions"><span class="wtape" style="background:var(--tape-sky)"></span>Instructions</div>
+    <div class="nav-item" data-page="isa-assembly"><span class="wtape" style="background:var(--tape-sky)"></span>Assembly Language</div>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Error Correction</div>
+    <div class="nav-item" data-page="ecc"><span class="wtape" style="background:var(--tape-rose)"></span>Reed-Solomon</div>
+    <div class="nav-item" data-page="tmr"><span class="wtape" style="background:var(--tape-rose)"></span>TMR</div>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Bio Safety</div>
+    <div class="nav-item" data-page="bio"><span class="wtape" style="background:var(--tape-sage)"></span>Constraints</div>
+    <div class="nav-item" data-page="bio-optimizer"><span class="wtape" style="background:var(--tape-sage)"></span>Optimizer</div>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Toolchain</div>
+    <div class="nav-item" data-page="assembler"><span class="wtape" style="background:var(--tape-lavender)"></span>Assembler</div>
+    <div class="nav-item" data-page="vm"><span class="wtape" style="background:var(--tape-lavender)"></span>Virtual Machine</div>
+    <div class="nav-item" data-page="simulator"><span class="wtape" style="background:var(--tape-lavender)"></span>Simulator</div>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-lbl">Examples</div>
+    <div class="nav-item" data-page="examples-algorithms"><span class="wtape" style="background:var(--tape-peach)"></span>Algorithms</div>
+    <div class="nav-item" data-page="examples-weights"><span class="wtape" style="background:var(--tape-peach)"></span>Model Weights</div>
+  </div>
+
+  <div class="s-coffee"></div>
+  <div class="s-doodle">see also → SPEC.md</div>
+</nav>
+
+<!-- ══════════ PAGE ══════════ -->
+<main class="page" id="main-page">
+
+<!-- ───────── INTRODUCTION ───────── -->
+<div id="page-introduction" class="doc-page active">
+  <header class="hero">
+    <div class="hero-coffee"></div>
+    <div class="hero-stamp">v 0.1.0<br>Apr 2026<br>◉<br>DRAFT</div>
+    <div class="hero-margin">§ see SPEC.md for full spec →</div>
+    <div class="hero-logo-mark">
+      <svg viewBox="0 0 80 80" width="68" height="68" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="lsk-h"><feTurbulence type="turbulence" baseFrequency="0.048" numOctaves="2" result="n" seed="4"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.2" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <clipPath id="lclip-h"><circle cx="40" cy="40" r="34"/></clipPath>
+        </defs>
+        <circle cx="40" cy="40" r="35" fill="#f5f0e2" filter="url(#lsk-h)"/>
+        <g clip-path="url(#lclip-h)" stroke-linecap="round" fill="none">
+          <path d="M27 5 C15 17,55 29,55 40 C55 51,15 63,27 75" stroke="#1c1714" stroke-width="2.4"/>
+          <path d="M53 5 C65 17,25 29,25 40 C25 51,65 63,53 75" stroke="#b71c1c" stroke-width="2.4"/>
+          <line x1="27" y1="14" x2="53" y2="14" stroke="#8b7b6e" stroke-width="1.1" stroke-dasharray="3,2.5"/>
+          <line x1="24" y1="26" x2="56" y2="26" stroke="#8b7b6e" stroke-width="1.1" stroke-dasharray="3,2.5"/>
+          <line x1="25" y1="38" x2="55" y2="38" stroke="#8b7b6e" stroke-width="1.2" stroke-dasharray="3,2"/>
+          <line x1="25" y1="42" x2="55" y2="42" stroke="#8b7b6e" stroke-width="1.2" stroke-dasharray="3,2"/>
+          <line x1="24" y1="54" x2="56" y2="54" stroke="#8b7b6e" stroke-width="1.1" stroke-dasharray="3,2.5"/>
+          <line x1="27" y1="66" x2="53" y2="66" stroke="#8b7b6e" stroke-width="1.1" stroke-dasharray="3,2.5"/>
+        </g>
+        <circle cx="40" cy="40" r="36" fill="none" stroke="#1c1714" stroke-width="2.5" filter="url(#lsk-h)"/>
+        <circle cx="40" cy="40" r="31" fill="none" stroke="rgba(28,23,20,0.18)" stroke-width="0.8" filter="url(#lsk-h)"/>
+      </svg>
+    </div>
+    <h1 class="hero-title"><span class="accent">H</span>elix
+      <svg class="title-line" viewBox="0 0 300 10" width="300" height="10" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 5 Q15 2 30 5 Q45 8 60 5 Q75 2 90 5 Q105 8 120 5 Q135 2 150 5 Q165 8 180 5 Q195 2 210 5 Q225 8 240 5 Q255 2 270 5 Q285 8 298 5" stroke="#b71c1c" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".65"/>
+      </svg>
+    </h1>
+    <p class="hero-sub">Programs encoded as synthetic DNA sequences. Compile your algorithm to ACGT — store it for 10,000 years — retrieve and execute.</p>
+    <div class="hero-pills">
+      <span class="pill">6 crates</span><span class="pill">32 opcodes</span>
+      <span class="pill">Reed-Solomon ECC</span><span class="pill">bio-safe output</span><span class="pill">159 tests</span>
+    </div>
+    <svg class="hero-dna" viewBox="0 0 80 220" width="72" height="220" xmlns="http://www.w3.org/2000/svg">
+      <defs><filter id="helix-wob"><feTurbulence type="turbulence" baseFrequency="0.032" numOctaves="2" result="n" seed="5"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G"/></filter></defs>
+      <g filter="url(#helix-wob)" stroke="#7a6a58" stroke-width="2" fill="none" stroke-linecap="round">
+        <path d="M60 12 C46 22,22 30,22 46 C22 62,50 72,60 88 C70 104,70 116,60 132 C50 148,22 158,22 174 C22 190,50 200,60 216"/>
+        <path d="M22 12 C36 22,62 30,62 46 C62 62,32 72,22 88 C12 104,12 116,22 132 C32 148,62 158,62 174 C62 190,32 200,22 216"/>
+        <line x1="28" y1="26" x2="56" y2="26" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <line x1="24" y1="42" x2="60" y2="42" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <line x1="24" y1="56" x2="60" y2="56" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <line x1="30" y1="70" x2="54" y2="70" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <line x1="30" y1="94" x2="54" y2="94" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <line x1="24" y1="108" x2="60" y2="108" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <line x1="24" y1="122" x2="60" y2="122" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <line x1="30" y1="136" x2="54" y2="136" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <line x1="30" y1="160" x2="54" y2="160" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <line x1="24" y1="174" x2="60" y2="174" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <line x1="24" y1="188" x2="60" y2="188" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <line x1="30" y1="202" x2="54" y2="202" stroke="#a89070" stroke-width="1.2" stroke-dasharray="3,2"/>
+      </g>
+      <text x="14" y="45" font-family="Special Elite,cursive" font-size="7.5" fill="#8b7b6e" opacity=".75">A</text>
+      <text x="63" y="45" font-family="Special Elite,cursive" font-size="7.5" fill="#8b7b6e" opacity=".75">T</text>
+      <text x="14" y="111" font-family="Special Elite,cursive" font-size="7.5" fill="#8b7b6e" opacity=".75">G</text>
+      <text x="63" y="111" font-family="Special Elite,cursive" font-size="7.5" fill="#8b7b6e" opacity=".75">C</text>
+      <text x="14" y="177" font-family="Special Elite,cursive" font-size="7.5" fill="#8b7b6e" opacity=".75">T</text>
+      <text x="63" y="177" font-family="Special Elite,cursive" font-size="7.5" fill="#8b7b6e" opacity=".75">A</text>
+    </svg>
+  </header>
+  <div class="torn"><svg viewBox="0 0 1200 28" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 20 L30 12 L60 22 L90 10 L120 18 L150 8 L180 20 L210 12 L240 22 L270 8 L300 16 L330 6 L360 20 L390 12 L420 22 L450 8 L480 18 L510 10 L540 20 L570 14 L600 22 L630 8 L660 16 L690 6 L720 20 L750 12 L780 22 L810 8 L840 18 L870 10 L900 20 L930 14 L960 22 L990 8 L1020 16 L1050 6 L1080 20 L1110 12 L1140 22 L1170 10 L1200 18 L1200 28 L0 28 Z" fill="rgba(100,78,50,0.08)" stroke="rgba(100,78,50,0.20)" stroke-width="1"/></svg></div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">What is Helix?</h2><span class="sec-num">§ 1.0</span></div>
+      <div class="margin-note" style="top:18px;right:36px;font-size:11px">DNA density:<br><strong>215 PB/gram</strong><br>vs Flash:<br>~1 TB/cm³</div>
+      <div class="body-text">
+        <p>Helix is a system for encoding executable algorithms as synthetic DNA sequences. Programs are compiled to an <code>ACGT</code> nucleotide string, persisted in DNA, retrieved via sequencing, and executed on a software virtual machine.</p>
+        <p>The goal: store fundamental algorithms — sorting, searching, arithmetic — in a physical medium with a <em>10,000-year shelf life</em>, and retrieve them intact decades later.</p>
+      </div>
+      <div class="callout">Helix is <strong>not</strong> biological computation. It uses DNA as a storage medium — the same way you'd use tape or flash — but with far superior density and longevity.</div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">The Pipeline</h2><span class="sec-num">§ 1.1</span></div>
+      <div class="ecc-layers"><h5>4 ECC Layers</h5><div class="ecc-layer-item">1. <span>synonyms</span> (codon degeneracy)</div><div class="ecc-layer-item">2. <span>SYNC</span> markers (frame sync)</div><div class="ecc-layer-item">3. <span>Reed-Solomon</span> RS(10,8)</div><div class="ecc-layer-item">4. <span>TMR</span> majority vote</div></div>
+      <div class="pipeline-wrap">
+        <svg viewBox="0 0 600 210" width="100%" style="max-width:600px" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arr" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0.5 L8.5 3.5 L0 6.5 Z" fill="#4a4035" opacity=".72"/></marker>
+            <marker id="arr-dna" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0.5 L8.5 3.5 L0 6.5 Z" fill="#924d0a" opacity=".72"/></marker>
+            <marker id="arr-grey" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0 0.5 L7.5 3 L0 5.5 Z" fill="#8b7b6e" opacity=".60"/></marker>
+          </defs>
+          <g filter="url(#box-sk)">
+            <rect x="14" y="24" width="108" height="44" fill="#faf7ee" stroke="#4a4035" stroke-width="1.6"/>
+            <rect x="160" y="24" width="108" height="44" fill="#f0fdf4" stroke="#1a5c2e" stroke-width="1.6"/>
+            <rect x="306" y="24" width="110" height="44" fill="#eff6ff" stroke="#1a3a6e" stroke-width="1.6"/>
+            <rect x="462" y="56" width="106" height="54" rx="2" fill="#fff7e6" stroke="#924d0a" stroke-width="1.6" stroke-dasharray="5,3"/>
+            <rect x="306" y="146" width="110" height="44" fill="#eff6ff" stroke="#1a3a6e" stroke-width="1.6"/>
+            <rect x="160" y="146" width="108" height="44" fill="#fdf2f8" stroke="#831843" stroke-width="1.6"/>
+          </g>
+          <text x="68" y="47" text-anchor="middle" font-family="Caveat,cursive" font-size="15" fill="#1c1714" font-weight="700">helix-asm</text>
+          <text x="68" y="61" text-anchor="middle" font-family="Kalam,cursive" font-size="9.5" fill="#8b7b6e">parse · encode</text>
+          <text x="214" y="47" text-anchor="middle" font-family="Caveat,cursive" font-size="15" fill="#1a5c2e" font-weight="700">helix-bio</text>
+          <text x="214" y="61" text-anchor="middle" font-family="Kalam,cursive" font-size="9.5" fill="#8b7b6e">GC / hairpin opt.</text>
+          <text x="361" y="44" text-anchor="middle" font-family="Caveat,cursive" font-size="15" fill="#1a3a6e" font-weight="700">helix-ecc</text>
+          <text x="361" y="57" text-anchor="middle" font-family="Kalam,cursive" font-size="9" fill="#8b7b6e">SYNC + RS + TMR</text>
+          <text x="361" y="67" text-anchor="middle" font-family="Kalam,cursive" font-size="9" fill="#1a3a6e" font-style="italic">encode</text>
+          <text x="515" y="78" text-anchor="middle" font-family="Caveat,cursive" font-size="14" fill="#924d0a" font-weight="700">DNA String</text>
+          <text x="515" y="93" text-anchor="middle" font-family="Special Elite,cursive" font-size="10" fill="#a0620c">ACGTGCAT…</text>
+          <text x="515" y="104" text-anchor="middle" font-family="Kalam,cursive" font-size="9" fill="#a0620c" font-style="italic">stored / retrieved</text>
+          <text x="361" y="166" text-anchor="middle" font-family="Caveat,cursive" font-size="15" fill="#1a3a6e" font-weight="700">helix-ecc</text>
+          <text x="361" y="179" text-anchor="middle" font-family="Kalam,cursive" font-size="9" fill="#8b7b6e">correct · resync</text>
+          <text x="361" y="188" text-anchor="middle" font-family="Kalam,cursive" font-size="9" fill="#1a3a6e" font-style="italic">decode</text>
+          <text x="214" y="166" text-anchor="middle" font-family="Caveat,cursive" font-size="15" fill="#831843" font-weight="700">helix-vm</text>
+          <text x="214" y="180" text-anchor="middle" font-family="Kalam,cursive" font-size="9.5" fill="#8b7b6e">execute · result</text>
+          <path d="M124 46 Q142 46 158 46" stroke="#4a4035" stroke-width="1.5" fill="none" marker-end="url(#arr)" stroke-linecap="round" opacity=".68"/>
+          <path d="M270 46 Q288 46 304 46" stroke="#4a4035" stroke-width="1.5" fill="none" marker-end="url(#arr)" stroke-linecap="round" opacity=".68"/>
+          <path d="M416 46 Q442 46 460 60" stroke="#924d0a" stroke-width="1.5" fill="none" marker-end="url(#arr-dna)" stroke-linecap="round" stroke-dasharray="5,2.5" opacity=".72"/>
+          <path d="M460 108 Q442 130 418 164" stroke="#924d0a" stroke-width="1.5" fill="none" marker-end="url(#arr-dna)" stroke-linecap="round" stroke-dasharray="5,2.5" opacity=".72"/>
+          <path d="M304 168 Q286 168 270 168" stroke="#4a4035" stroke-width="1.5" fill="none" marker-end="url(#arr)" stroke-linecap="round" opacity=".68"/>
+          <text x="136" y="41" font-family="Kalam,cursive" font-size="9" fill="#8b7b6e" opacity=".75">codons</text>
+          <text x="275" y="41" font-family="Kalam,cursive" font-size="9" fill="#8b7b6e" opacity=".75">codons</text>
+          <text x="278" y="163" font-family="Kalam,cursive" font-size="9" fill="#8b7b6e" opacity=".75">decoded</text>
+          <text x="420" y="20" font-family="Kalam,cursive" font-size="9.5" fill="#8b7b6e" opacity=".75" transform="rotate(-4,420,20)">← 12 nt / instruction</text>
+        </svg>
+        <p class="pipeline-cap">fig. 1 — end-to-end encoding pipeline (sketch, not to scale)</p>
+      </div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Register File</h2><span class="sec-num">§ 2.0</span></div>
+      <div class="body-text"><p>8 registers, 16-bit unsigned. <strong>R0 is hardwired zero</strong> — writes silently discarded.</p></div>
+      <div class="margin-note pencil" style="top:44px;right:36px;font-size:11px">only 7 writable<br>registers — tight<br>for bubble sort!</div>
+      <table class="sketch-table">
+        <thead><tr><th>Reg</th><th>Alias</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><span class="reg-label reg-zero">R0</span></td><td>ZERO</td><td>Hardwired 0. Writes discarded.</td></tr>
+          <tr><td><span class="reg-label">R1</span></td><td>GP1</td><td>General purpose</td></tr>
+          <tr><td><span class="reg-label">R2</span></td><td>GP2</td><td>General purpose</td></tr>
+          <tr><td><span class="reg-label">R3</span></td><td>GP3</td><td>General purpose</td></tr>
+          <tr><td><span class="reg-label">R4</span></td><td>GP4</td><td>General purpose</td></tr>
+          <tr><td><span class="reg-label">R5</span></td><td>GP5</td><td>General purpose</td></tr>
+          <tr><td><span class="reg-label">R6</span></td><td>GP6</td><td>General purpose</td></tr>
+          <tr><td><span class="reg-label">R7</span></td><td>ACC</td><td>Accumulator / return value</td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin-top:18px;font-size:13px">Instruction format: <strong>4 codons = 24 bits = 12 nucleotides</strong> per instruction. Fixed-width — frame loss is recoverable via SYNC markers.</div>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── QUICKSTART ───────── -->
+<div id="page-quickstart" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Quickstart</div>
+    <div class="doc-header-crumb">Getting Started · §2</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Prerequisites</h2><span class="sec-num">§ 2.1</span></div>
+      <div class="body-text"><p>Rust <strong>1.74+</strong> (stable). The workspace builds with <code>cargo build --workspace</code>.</p>
+      <ul><li>No C dependencies, no unsafe code</li><li>All 159 tests pass on stable Rust</li><li>Linux / macOS / Windows (tested on Linux)</li></ul></div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Add to your project</h2><span class="sec-num">§ 2.2</span></div>
+      <div class="code-block"><span class="code-fname">Cargo.toml</span>
+<pre><span class="ck">[dependencies]</span>
+<span class="cs">helix-asm</span> = { git = <span class="cs">"https://github.com/mighty840/helix"</span> }
+<span class="cs">helix-vm</span>  = { git = <span class="cs">"https://github.com/mighty840/helix"</span> }
+<span class="cc"># optional: ECC round-trip</span>
+<span class="cs">helix-ecc</span> = { git = <span class="cs">"https://github.com/mighty840/helix"</span> }
+<span class="cs">helix-bio</span> = { git = <span class="cs">"https://github.com/mighty840/helix"</span> }</pre></div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Encode &amp; Run</h2><span class="sec-num">§ 2.3</span></div>
+      <div class="margin-note green" style="top:50px;right:36px;font-size:11px">R7 holds the<br>return value<br>by convention</div>
+      <div class="code-block"><span class="code-fname">src/main.rs</span>
+<pre><span class="ck">use</span> helix_asm::Assembler;
+<span class="ck">use</span> helix_vm::{Cpu, ProgramLoader};
+
+<span class="ck">fn</span> <span class="cs">main</span>() {
+    <span class="ck">let</span> src = <span class="cs">r#"
+        .program "add_example"
+        .version 1
+        .text
+        .entry main
+        main:
+          IMML R1, 21
+          IMML R2, 21
+          ADD  R7, R1, R2
+          HALT
+    "#</span>;
+
+    <span class="cc">// assemble → codons (Vec&lt;Codon&gt;)</span>
+    <span class="ck">let</span> output = Assembler::new().assemble(src).unwrap();
+    <span class="cc">// load → run</span>
+    <span class="ck">let</span> prog = ProgramLoader::load(&amp;output.codons).unwrap();
+    <span class="ck">let mut</span> cpu = Cpu::new();
+    cpu.execute(&amp;prog).unwrap();
+    println!(<span class="cs">"R7 = {}"</span>, cpu.registers()[<span class="cn">7</span>]); <span class="cc">// 42</span>
+}</pre></div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Full Round-Trip (with ECC)</h2><span class="sec-num">§ 2.4</span></div>
+      <div class="code-block"><span class="code-fname">src/roundtrip.rs</span>
+<pre><span class="ck">use</span> helix_asm::Assembler;
+<span class="ck">use</span> helix_ecc::{EccConfig, EccEncoder, EccDecoder};
+<span class="ck">use</span> helix_bio::SequenceOptimizer;
+<span class="ck">use</span> helix_vm::{Cpu, ProgramLoader};
+
+<span class="ck">let</span> output  = Assembler::new().assemble(SRC).unwrap();
+<span class="ck">let</span> cfg     = EccConfig::default();
+<span class="ck">let</span> dna     = EccEncoder::new(cfg).encode(&amp;output.codons).unwrap();
+<span class="ck">let</span> report  = SequenceOptimizer::new().lint(&amp;dna);
+<span class="cc">// simulate DNA storage (mutations …)</span>
+<span class="ck">let</span> decoded = EccDecoder::new(cfg).decode(&amp;dna).unwrap();
+<span class="ck">let</span> prog    = ProgramLoader::load(&amp;decoded).unwrap();
+<span class="ck">let mut</span> cpu = Cpu::new();
+cpu.execute(&amp;prog).unwrap();</pre></div>
+      <div class="callout tip">Run <code>cargo test --workspace</code> from the repo root to verify all 159 tests pass before integrating.</div>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── ARCHITECTURE ───────── -->
+<div id="page-architecture" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Architecture</div>
+    <div class="doc-header-crumb">Getting Started · §3</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Six Crates</h2><span class="sec-num">§ 3.1</span></div>
+      <table class="sketch-table">
+        <thead><tr><th>Crate</th><th>Role</th><th>Key Types</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">helix-isa</span></td><td>Core types</td><td>Base, Codon, DnaSequence, Opcode, Instruction</td></tr>
+          <tr><td><span class="mono">helix-asm</span></td><td>Assembler</td><td>Assembler, AssemblyOutput, SourceProgram</td></tr>
+          <tr><td><span class="mono">helix-bio</span></td><td>Bio safety</td><td>SequenceOptimizer, LintReport, LintViolation</td></tr>
+          <tr><td><span class="mono">helix-ecc</span></td><td>Error correction</td><td>EccEncoder, EccDecoder, EccConfig, EccError</td></tr>
+          <tr><td><span class="mono">helix-vm</span></td><td>Virtual machine</td><td>Cpu, Memory, ProgramLoader, CpuError</td></tr>
+          <tr><td><span class="mono">helix-sim</span></td><td>Simulator / chaos</td><td>ErrorInjector, InjectionConfig, SimReport</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Dependency Graph</h2><span class="sec-num">§ 3.2</span></div>
+      <div class="pipeline-wrap">
+        <svg viewBox="0 0 520 200" width="100%" style="max-width:520px" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="darr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0 0.5 L7.5 3 L0 5.5 Z" fill="#4a4035" opacity=".65"/></marker>
+          </defs>
+          <g filter="url(#box-sk)">
+            <rect x="190" y="150" width="130" height="36" fill="#faf7ee" stroke="#4a4035" stroke-width="1.5"/>
+            <rect x="14" y="80" width="110" height="36" fill="#faf7ee" stroke="#4a4035" stroke-width="1.5"/>
+            <rect x="145" y="80" width="110" height="36" fill="#f0fdf4" stroke="#1a5c2e" stroke-width="1.5"/>
+            <rect x="276" y="80" width="110" height="36" fill="#eff6ff" stroke="#1a3a6e" stroke-width="1.5"/>
+            <rect x="396" y="80" width="110" height="36" fill="#fdf2f8" stroke="#831843" stroke-width="1.5"/>
+            <rect x="276" y="10" width="110" height="36" fill="#fff7e6" stroke="#924d0a" stroke-width="1.5"/>
+          </g>
+          <text x="255" y="173" text-anchor="middle" font-family="Caveat,cursive" font-size="14" fill="#1c1714" font-weight="700">helix-isa</text>
+          <text x="255" y="185" text-anchor="middle" font-family="Kalam,cursive" font-size="9" fill="#8b7b6e">core types</text>
+          <text x="69" y="103" text-anchor="middle" font-family="Caveat,cursive" font-size="13" fill="#1c1714" font-weight="700">helix-asm</text>
+          <text x="200" y="103" text-anchor="middle" font-family="Caveat,cursive" font-size="13" fill="#1a5c2e" font-weight="700">helix-bio</text>
+          <text x="331" y="103" text-anchor="middle" font-family="Caveat,cursive" font-size="13" fill="#1a3a6e" font-weight="700">helix-ecc</text>
+          <text x="451" y="103" text-anchor="middle" font-family="Caveat,cursive" font-size="13" fill="#831843" font-weight="700">helix-vm</text>
+          <text x="331" y="33" text-anchor="middle" font-family="Caveat,cursive" font-size="13" fill="#924d0a" font-weight="700">helix-sim</text>
+          <path d="M69 116 L69 145 Q69 150 100 150 L188 150" stroke="#4a4035" stroke-width="1.2" fill="none" marker-end="url(#darr)" opacity=".6"/>
+          <path d="M200 116 L200 145 Q200 150 220 150 L188 150" stroke="#1a5c2e" stroke-width="1.2" fill="none" marker-end="url(#darr)" opacity=".6"/>
+          <path d="M331 116 L331 148" stroke="#1a3a6e" stroke-width="1.2" fill="none" marker-end="url(#darr)" opacity=".6"/>
+          <path d="M451 116 L451 145 Q451 150 420 150 L322 150" stroke="#831843" stroke-width="1.2" fill="none" marker-end="url(#darr)" opacity=".6"/>
+          <path d="M331 46 L331 78" stroke="#924d0a" stroke-width="1.2" fill="none" marker-end="url(#darr)" opacity=".6"/>
+          <text x="350" y="65" font-family="Kalam,cursive" font-size="9" fill="#8b7b6e" opacity=".75">uses helix-ecc</text>
+        </svg>
+        <p class="pipeline-cap">fig. 2 — crate dependency graph (arrows point to dependency)</p>
+      </div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Data Formats</h2><span class="sec-num">§ 3.3</span></div>
+      <table class="sketch-table">
+        <thead><tr><th>Stage</th><th>Format</th><th>Size</th></tr></thead>
+        <tbody>
+          <tr><td>Source</td><td><span class="mono">.hx</span> text file</td><td>variable</td></tr>
+          <tr><td>Assembled</td><td><span class="mono">Vec&lt;Codon&gt;</span></td><td>4 codons/instr = 24 bits/instr</td></tr>
+          <tr><td>Bio-checked</td><td><span class="mono">DnaSequence</span></td><td>12 nt/instr</td></tr>
+          <tr><td>ECC-encoded</td><td><span class="mono">DnaSequence</span></td><td>+SYNC header +RS parity +TMR ×3</td></tr>
+          <tr><td>Decoded</td><td><span class="mono">Vec&lt;Codon&gt;</span></td><td>same as assembled</td></tr>
+          <tr><td>Executed</td><td>register state</td><td>8 × u16 = 128 bits</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── ISA OVERVIEW ───────── -->
+<div id="page-isa-overview" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">ISA Overview</div>
+    <div class="doc-header-crumb">ISA Reference · §4</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Design Goals</h2><span class="sec-num">§ 4.1</span></div>
+      <div class="body-text">
+        <p>The Helix ISA is optimised for DNA storage, not speed. Every design decision trades execution efficiency for storage robustness:</p>
+        <ul>
+          <li><strong>Fixed-width instructions</strong> — 4 codons each; frame loss is recoverable</li>
+          <li><strong>Small opcode space</strong> — 32 opcodes (5 bits); leaves room for bio-safe codon selection</li>
+          <li><strong>No memory-mapped I/O</strong> — LOAD/STORE address a small scratch RAM only</li>
+          <li><strong>Relative branches</strong> — signed 8-bit offsets; no absolute addresses in DNA</li>
+        </ul>
+      </div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Instruction Format</h2><span class="sec-num">§ 4.2</span></div>
+      <div class="margin-note" style="top:8px;right:36px;font-size:11px">6 bits per<br>codon =<br>A,C,G,T<br>× A,C,G,T<br>× A,C,G,T<br>= 64 values</div>
+      <div class="body-text"><p>Every instruction is <strong>exactly 4 codons = 12 nucleotides = 24 bits</strong>.</p></div>
+      <div class="code-block" style="transform:none;margin-top:14px"><span class="code-fname">24-bit layout</span>
+<pre> Codon 0        Codon 1        Codon 2        Codon 3
+┌──────────────┬──────────────┬──────────────┬──────────────┐
+│  opcode [5:0]│  field2 [5:0]│  field3 [5:0]│  field4 [5:0]│
+└──────────────┴──────────────┴──────────────┴──────────────┘
+
+R-type:  [op:5|0][rd:3|pad:3][rs1:3|pad:3][rs2:3|pad:3]
+I-type:  [op:5|0][rd:3|pad:3][imm_hi:6   ][imm_lo:6   ]
+Branch:  [op:5|0][pad:6     ][offset_hi:6][offset_lo:6]</pre></div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Codon Encoding</h2><span class="sec-num">§ 4.3</span></div>
+      <div class="body-text"><p>A codon is 3 DNA bases. Each base encodes 2 bits: <code>A=00, C=01, G=10, T=11</code>. So a codon <code>GCA</code> = <code>10 01 00</code> = 36.</p></div>
+      <table class="sketch-table" style="font-size:12.5px">
+        <thead><tr><th>Base</th><th>Bits</th><th>Example codon</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">A</span></td><td>00</td><td><span class="mono">AAA</span></td><td>0</td></tr>
+          <tr><td><span class="mono">C</span></td><td>01</td><td><span class="mono">ACG</span></td><td>6</td></tr>
+          <tr><td><span class="mono">G</span></td><td>10</td><td><span class="mono">GCA</span></td><td>36</td></tr>
+          <tr><td><span class="mono">T</span></td><td>11</td><td><span class="mono">TTT</span></td><td>63</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── ISA INSTRUCTIONS ───────── -->
+<div id="page-isa-instructions" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Instruction Set</div>
+    <div class="doc-header-crumb">ISA Reference · §5 — 32 opcodes</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Arithmetic</h2><span class="sec-num">§ 5.1</span></div>
+      <table class="sketch-table" style="font-size:13px">
+        <thead><tr><th>Mnemonic</th><th>Opcode</th><th>Type</th><th>Operation</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">ADD rd, rs1, rs2</span></td><td>0x00</td><td><span class="tag-r">R</span></td><td>rd = rs1 + rs2</td></tr>
+          <tr><td><span class="mono">SUB rd, rs1, rs2</span></td><td>0x01</td><td><span class="tag-r">R</span></td><td>rd = rs1 − rs2</td></tr>
+          <tr><td><span class="mono">MUL rd, rs1, rs2</span></td><td>0x02</td><td><span class="tag-r">R</span></td><td>rd = rs1 × rs2 (low 16 bits)</td></tr>
+          <tr><td><span class="mono">DIV rd, rs1, rs2</span></td><td>0x03</td><td><span class="tag-r">R</span></td><td>rd = rs1 ÷ rs2 (integer)</td></tr>
+          <tr><td><span class="mono">MOD rd, rs1, rs2</span></td><td>0x04</td><td><span class="tag-r">R</span></td><td>rd = rs1 mod rs2</td></tr>
+          <tr><td><span class="mono">INC rd, rs</span></td><td>0x05</td><td><span class="tag-r">R</span></td><td>rd = rs + 1</td></tr>
+          <tr><td><span class="mono">DEC rd, rs</span></td><td>0x06</td><td><span class="tag-r">R</span></td><td>rd = rs − 1</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Bitwise &amp; Shift</h2><span class="sec-num">§ 5.2</span></div>
+      <table class="sketch-table" style="font-size:13px">
+        <thead><tr><th>Mnemonic</th><th>Opcode</th><th>Type</th><th>Operation</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">AND rd, rs1, rs2</span></td><td>0x07</td><td><span class="tag-r">R</span></td><td>rd = rs1 &amp; rs2</td></tr>
+          <tr><td><span class="mono">OR  rd, rs1, rs2</span></td><td>0x08</td><td><span class="tag-r">R</span></td><td>rd = rs1 | rs2</td></tr>
+          <tr><td><span class="mono">XOR rd, rs1, rs2</span></td><td>0x09</td><td><span class="tag-r">R</span></td><td>rd = rs1 ^ rs2</td></tr>
+          <tr><td><span class="mono">NOT rd, rs</span></td><td>0x0A</td><td><span class="tag-r">R</span></td><td>rd = ~rs</td></tr>
+          <tr><td><span class="mono">SHL rd, rs1, rs2</span></td><td>0x0B</td><td><span class="tag-r">R</span></td><td>rd = rs1 &lt;&lt; rs2</td></tr>
+          <tr><td><span class="mono">SHR rd, rs1, rs2</span></td><td>0x0C</td><td><span class="tag-r">R</span></td><td>rd = rs1 &gt;&gt; rs2 (logical)</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Memory &amp; Immediate</h2><span class="sec-num">§ 5.3</span></div>
+      <table class="sketch-table" style="font-size:13px">
+        <thead><tr><th>Mnemonic</th><th>Opcode</th><th>Type</th><th>Operation</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">CMP rs1, rs2</span></td><td>0x0D</td><td><span class="tag-r">R</span></td><td>set flags (rs1−rs2)</td></tr>
+          <tr><td><span class="mono">LOAD rd, rs</span></td><td>0x0E</td><td><span class="tag-r">R</span></td><td>rd = mem[rs]</td></tr>
+          <tr><td><span class="mono">STORE ra, rs</span></td><td>0x0F</td><td><span class="tag-r">R</span></td><td>mem[ra] = rs</td></tr>
+          <tr><td><span class="mono">PUSH rs</span></td><td>0x10</td><td><span class="tag-r">R</span></td><td>push rs onto stack</td></tr>
+          <tr><td><span class="mono">POP rd</span></td><td>0x11</td><td><span class="tag-r">R</span></td><td>pop into rd</td></tr>
+          <tr><td><span class="mono">IMML rd, imm8</span></td><td>0x12</td><td><span class="tag-i">I</span></td><td>rd[7:0] = imm8 (low byte)</td></tr>
+          <tr><td><span class="mono">IMMH rd, imm8</span></td><td>0x13</td><td><span class="tag-i">I</span></td><td>rd[15:8] = imm8 (high byte)</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Control Flow</h2><span class="sec-num">§ 5.4</span></div>
+      <table class="sketch-table" style="font-size:13px">
+        <thead><tr><th>Mnemonic</th><th>Opcode</th><th>Branch condition</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">JMP offset</span></td><td>0x14</td><td>unconditional</td></tr>
+          <tr><td><span class="mono">BEQ offset</span></td><td>0x15</td><td>last CMP equal (zero flag)</td></tr>
+          <tr><td><span class="mono">BNE offset</span></td><td>0x16</td><td>last CMP not equal</td></tr>
+          <tr><td><span class="mono">BLT offset</span></td><td>0x17</td><td>last CMP less-than</td></tr>
+          <tr><td><span class="mono">BGE offset</span></td><td>0x18</td><td>last CMP greater-or-equal</td></tr>
+          <tr><td><span class="mono">CALL offset</span></td><td>0x19</td><td>call subroutine (push PC)</td></tr>
+          <tr><td><span class="mono">RET</span></td><td>0x1A</td><td>return (pop PC)</td></tr>
+          <tr><td><span class="mono">NOP</span></td><td>0x1B</td><td>no-op</td></tr>
+          <tr><td><span class="mono">HALT</span></td><td>0x1C</td><td>stop execution</td></tr>
+          <tr><td><span class="mono">SYNC</span></td><td>0x1D</td><td>ECC frame boundary marker</td></tr>
+          <tr><td><span class="mono">ECCP p0,p1</span></td><td>0x1E</td><td>inline parity codon (internal)</td></tr>
+          <tr><td><span class="mono">TRAP code</span></td><td>0x1F</td><td>software trap / debug hook</td></tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin-top:16px">Branch <em>offset</em> is a <strong>signed 8-bit integer</strong> counting instructions from the instruction <em>after</em> the branch. <code>BGE -2</code> jumps back 2 instructions.</div>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── ISA ASSEMBLY ───────── -->
+<div id="page-isa-assembly" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Assembly Language</div>
+    <div class="doc-header-crumb">ISA Reference · §6</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">File Format</h2><span class="sec-num">§ 6.1</span></div>
+      <div class="body-text"><p>Helix assembly (<code>.hx</code>) is line-oriented. Comments start with <code>;</code>. Directives start with <code>.</code>. Labels end with <code>:</code>.</p></div>
+      <div class="code-block"><span class="code-fname">template.hx</span>
+<pre><span class="cc">; Required header directives</span>
+<span class="ck">.program</span> <span class="cs">"name"</span>   <span class="cc">; program name string</span>
+<span class="ck">.version</span> <span class="cn">1</span>        <span class="cc">; format version (must be 1)</span>
+<span class="ck">.text</span>             <span class="cc">; begin code section</span>
+<span class="ck">.entry</span> main       <span class="cc">; entry-point label</span>
+
+main:
+  NOP
+  HALT</pre></div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Directives</h2><span class="sec-num">§ 6.2</span></div>
+      <table class="sketch-table">
+        <thead><tr><th>Directive</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">.program "name"</span></td><td>Sets program name metadata</td></tr>
+          <tr><td><span class="mono">.version N</span></td><td>Format version (currently 1)</td></tr>
+          <tr><td><span class="mono">.text</span></td><td>Marks start of code section</td></tr>
+          <tr><td><span class="mono">.entry label</span></td><td>Declares the execution entry point</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Load a 16-bit Immediate</h2><span class="sec-num">§ 6.3</span></div>
+      <div class="body-text"><p>IMML/IMMH write 8 bits at a time. To load a full 16-bit constant into R1:</p></div>
+      <div class="code-block" style="transform:none"><span class="code-fname">load_1000.hx snippet</span>
+<pre>  IMML R1, <span class="cn">232</span>    <span class="cc">; R1[7:0]  = 0xE8  (1000 &amp; 0xFF)</span>
+  IMMH R1, <span class="cn">3</span>      <span class="cc">; R1[15:8] = 0x03  (1000 &gt;&gt; 8)</span>
+  <span class="cc">; R1 = 0x03E8 = 1000</span></pre></div>
+      <div class="callout tip">Initialise registers with IMML only when the value fits in 8 bits. Use the IMMH+IMML pair for anything ≥ 256.</div>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── ECC (Reed-Solomon) ───────── -->
+<div id="page-ecc" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Reed-Solomon ECC</div>
+    <div class="doc-header-crumb">Error Correction · §7</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">RS(10, 8)</h2><span class="sec-num">§ 7.1</span></div>
+      <div class="margin-note" style="top:8px;right:36px;font-size:11px">corrects up to<br><strong>1 symbol error</strong><br>per block<br>(t = 1)</div>
+      <div class="body-text">
+        <p>Helix uses a Reed-Solomon code over GF(2⁶) with parameters <strong>RS(10, 8)</strong>: each block contains 8 data symbols and 2 parity symbols, producing 10-symbol codewords. One symbol = one codon value (6 bits).</p>
+        <p>Only the <strong>opcode codons</strong> (codon 0 of each instruction) are RS-protected per block of 8 instructions. Operand corruption beyond single-symbol correction falls to TMR.</p>
+      </div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Block Structure</h2><span class="sec-num">§ 7.2</span></div>
+      <div class="code-block" style="transform:none"><span class="code-fname">encoded block layout</span>
+<pre>[ SYNC (4 codons) ]
+[ instr₀ (4 codons) ]  ← codon₀ = opcode symbol 0
+[ instr₁ (4 codons) ]  ← codon₀ = opcode symbol 1
+  …
+[ instr₇ (4 codons) ]  ← codon₀ = opcode symbol 7
+[ ECCP parity₀ parity₁ padding ]  ← 2 RS parity symbols</pre></div>
+      <div class="callout">The SYNC marker (4 known codons) allows the decoder to <em>resync</em> after frame loss — the most common error in long-term DNA storage.</div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">API</h2><span class="sec-num">§ 7.3</span></div>
+      <div class="code-block"><span class="code-fname">ecc usage</span>
+<pre><span class="ck">use</span> helix_ecc::{EccConfig, EccEncoder, EccDecoder};
+
+<span class="ck">let</span> cfg = EccConfig::default();
+<span class="cc">// encode Vec&lt;Codon&gt; → DnaSequence with parity</span>
+<span class="ck">let</span> dna = EccEncoder::new(cfg).encode(&amp;codons)?;
+<span class="cc">// decode + correct DnaSequence → Vec&lt;Codon&gt;</span>
+<span class="ck">let</span> recovered = EccDecoder::new(cfg).decode(&amp;dna)?;</pre></div>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── TMR ───────── -->
+<div id="page-tmr" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Triple Modular Redundancy</div>
+    <div class="doc-header-crumb">Error Correction · §8</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">How TMR Works</h2><span class="sec-num">§ 8.1</span></div>
+      <div class="body-text">
+        <p>TMR stores <strong>three copies</strong> of the encoded DNA sequence and takes a majority vote at decode time. If two copies agree, the third is considered corrupt and the majority value wins.</p>
+        <p>TMR is the outer layer of ECC — it handles burst errors that span an entire RS block, which RS alone cannot correct.</p>
+      </div>
+      <div class="callout">TMR triples the storage cost. For long-term archival this is acceptable — DNA synthesis costs continue to fall ~50% per year.</div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Voting Logic</h2><span class="sec-num">§ 8.2</span></div>
+      <div class="code-block" style="transform:none"><span class="code-fname">majority vote (conceptual)</span>
+<pre><span class="cc">// For each codon position i:</span>
+<span class="ck">let</span> a = copy_a[i];
+<span class="ck">let</span> b = copy_b[i];
+<span class="ck">let</span> c = copy_c[i];
+<span class="ck">let</span> voted =
+    <span class="ck">if</span> a == b { a }
+    <span class="ck">else if</span> a == c { a }
+    <span class="ck">else if</span> b == c { b }
+    <span class="ck">else</span> { <span class="cc">/* unresolvable — flag EccError */</span> };</pre></div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">When to use TMR</h2><span class="sec-num">§ 8.3</span></div>
+      <div class="body-text">
+        <p>TMR is optional and configured via <code>EccConfig</code>. Enable it for:</p>
+        <ul>
+          <li>Expected long storage durations (&gt; 100 years)</li>
+          <li>Environments with high radiation or oxidative stress</li>
+          <li>Critical algorithms where retrieval failure is unacceptable</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── BIO CONSTRAINTS ───────── -->
+<div id="page-bio" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Bio Safety Constraints</div>
+    <div class="doc-header-crumb">Bio Safety · §9</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Why Constraints?</h2><span class="sec-num">§ 9.1</span></div>
+      <div class="body-text">
+        <p>Synthetic DNA that violates synthesis or sequencing constraints will fail in the lab, even if the encoding is logically correct. Helix enforces four categories of bio-physical constraints before output.</p>
+      </div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Constraint Rules</h2><span class="sec-num">§ 9.2</span></div>
+      <table class="sketch-table">
+        <thead><tr><th>Rule</th><th>Limit</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr><td>GC content</td><td>40 – 60 %</td><td>Outside range: synthesis failure, poor sequencing</td></tr>
+          <tr><td>Homopolymer run</td><td>≤ 4 identical bases</td><td>Long runs cause polymerase slippage</td></tr>
+          <tr><td>Hairpin ΔG</td><td>≥ −2 kcal/mol</td><td>Secondary structure prevents sequencing</td></tr>
+          <tr><td>Tandem repeat</td><td>no unit &gt; 8 nt repeated &gt; 3×</td><td>PCR amplification artefacts</td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn">These constraints are <strong>not optional</strong> for physical synthesis. Skipping the bio check will produce sequences that cannot be synthesised by current providers.</div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Lint API</h2><span class="sec-num">§ 9.3</span></div>
+      <div class="code-block"><span class="code-fname">bio lint</span>
+<pre><span class="ck">use</span> helix_bio::SequenceOptimizer;
+
+<span class="ck">let</span> report = SequenceOptimizer::new().lint(&amp;dna_seq);
+<span class="ck">if</span> !report.violations.is_empty() {
+    <span class="ck">for</span> v <span class="ck">in</span> &amp;report.violations {
+        eprintln!(<span class="cs">"{v}"</span>);
+    }
+}</pre></div>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── BIO OPTIMIZER ───────── -->
+<div id="page-bio-optimizer" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Bio Optimizer</div>
+    <div class="doc-header-crumb">Bio Safety · §10</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Codon Degeneracy</h2><span class="sec-num">§ 10.1</span></div>
+      <div class="body-text">
+        <p>The 6-bit codon space has <strong>64 values</strong>, but Helix only uses values 0–31 for opcodes and 0–7 for registers. This leaves slack that the optimizer uses to substitute bio-problematic codons with <em>synonymous</em> alternatives that encode the same value but produce better GC content or break homopolymer runs.</p>
+      </div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Optimization Strategy</h2><span class="sec-num">§ 10.2</span></div>
+      <div class="body-text">
+        <ul>
+          <li><strong>GC balancing</strong> — slide a window of 20 codons; if GC &lt; 40% swap a low-GC codon for a synonymous high-GC one</li>
+          <li><strong>Homopolymer breaking</strong> — detect runs ≥ 4; substitute the 4th codon with a GC-neutral synonym</li>
+          <li><strong>Hairpin avoidance</strong> — compute approximate ΔG; if below threshold, reverse-complement the offending region using synonyms where possible</li>
+        </ul>
+      </div>
+      <div class="callout">The optimizer is a lint pass only — it reports violations but does <em>not</em> automatically rewrite sequences. Automatic rewriting is on the roadmap.</div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Modules</h2><span class="sec-num">§ 10.3</span></div>
+      <table class="sketch-table">
+        <thead><tr><th>Module</th><th>Checks</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">helix_bio::gc</span></td><td>GC content per window</td></tr>
+          <tr><td><span class="mono">helix_bio::homopolymer</span></td><td>Long identical-base runs</td></tr>
+          <tr><td><span class="mono">helix_bio::structure</span></td><td>Hairpin / secondary structure ΔG</td></tr>
+          <tr><td><span class="mono">helix_bio::repeats</span></td><td>Tandem repeat detection</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── ASSEMBLER ───────── -->
+<div id="page-assembler" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Assembler</div>
+    <div class="doc-header-crumb">Toolchain · §11 — helix-asm</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Pipeline</h2><span class="sec-num">§ 11.1</span></div>
+      <div class="body-text">
+        <p>The assembler transforms <code>.hx</code> source text into a <code>Vec&lt;Codon&gt;</code> through three stages:</p>
+        <ul>
+          <li><strong>Parse</strong> (<code>helix_asm::parser</code>) — tokenise and produce a <code>SourceProgram</code> with unresolved label refs</li>
+          <li><strong>Resolve</strong> (<code>helix_asm::resolver</code>) — compute branch offsets, produce <code>ResolvedProgram</code></li>
+          <li><strong>Emit</strong> (<code>helix_asm::emitter</code>) — encode each <code>Instruction</code> to 4 <code>Codon</code>s, return <code>AssemblyOutput</code></li>
+        </ul>
+      </div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">API</h2><span class="sec-num">§ 11.2</span></div>
+      <div class="code-block"><span class="code-fname">assembler API</span>
+<pre><span class="ck">use</span> helix_asm::{Assembler, AssemblyOutput};
+
+<span class="ck">let</span> output: AssemblyOutput = Assembler::new()
+    .assemble(source_str)?;
+
+<span class="cc">// output.codons  : Vec&lt;Codon&gt;  — ready for ECC / VM</span>
+<span class="cc">// output.labels  : HashMap&lt;String, usize&gt;  — label map</span>
+<span class="cc">// output.program : ResolvedProgram  — instruction list</span></pre></div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Error Handling</h2><span class="sec-num">§ 11.3</span></div>
+      <div class="body-text"><p>All errors implement <code>std::error::Error</code> and carry source-position information:</p></div>
+      <table class="sketch-table">
+        <thead><tr><th>Error type</th><th>Cause</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">ParseError</span></td><td>Invalid token, malformed directive</td></tr>
+          <tr><td><span class="mono">AssembleError::UndefinedLabel</span></td><td>Branch target not found</td></tr>
+          <tr><td><span class="mono">AssembleError::OffsetOverflow</span></td><td>Branch distance &gt; ±127 instructions</td></tr>
+          <tr><td><span class="mono">AssembleError::ImmOverflow</span></td><td>Immediate value &gt; 255</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── VM ───────── -->
+<div id="page-vm" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Virtual Machine</div>
+    <div class="doc-header-crumb">Toolchain · §12 — helix-vm</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Execution Model</h2><span class="sec-num">§ 12.1</span></div>
+      <div class="body-text">
+        <p>The VM is a simple <strong>register machine</strong>: 8 × 16-bit registers, a program counter, a flags register (zero, negative), and a small scratch <strong>RAM</strong> (256 × 16-bit words).</p>
+        <p>Execution is <em>deterministic and synchronous</em> — no threads, no I/O, no side effects. This makes results reproducible regardless of when or where the DNA is retrieved.</p>
+      </div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">API</h2><span class="sec-num">§ 12.2</span></div>
+      <div class="code-block"><span class="code-fname">vm usage</span>
+<pre><span class="ck">use</span> helix_vm::{Cpu, ProgramLoader};
+
+<span class="ck">let</span> prog = ProgramLoader::load(&amp;codons)?;
+<span class="ck">let mut</span> cpu = Cpu::new();
+cpu.execute(&amp;prog)?;
+
+<span class="ck">let</span> regs = cpu.registers();
+println!(<span class="cs">"R7 = {}"</span>, regs[<span class="cn">7</span>]);
+println!(<span class="cs">"R1 = {}"</span>, regs[<span class="cn">1</span>]);</pre></div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Memory Layout</h2><span class="sec-num">§ 12.3</span></div>
+      <table class="sketch-table">
+        <thead><tr><th>Region</th><th>Size</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Registers</td><td>8 × u16</td><td>R0 = 0 always</td></tr>
+          <tr><td>Scratch RAM</td><td>256 × u16</td><td>LOAD/STORE target; zeroed on init</td></tr>
+          <tr><td>Call stack</td><td>64 depth</td><td>CALL/RET only; overflow = CpuError</td></tr>
+          <tr><td>Flags</td><td>zero, negative</td><td>Set by CMP; read by branches</td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn">HALT is required — programs that don't HALT will run until the instruction step limit (default 65,536) and return <code>CpuError::StepLimitExceeded</code>.</div>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── SIMULATOR ───────── -->
+<div id="page-simulator" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Simulator</div>
+    <div class="doc-header-crumb">Toolchain · §13 — helix-sim</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">What is helix-sim?</h2><span class="sec-num">§ 13.1</span></div>
+      <div class="body-text">
+        <p><code>helix-sim</code> is a chaos / fault-injection harness. It simulates the DNA storage medium by randomly mutating a <code>DnaSequence</code> according to a configurable error model, then runs the full decode+execute pipeline to measure error resilience.</p>
+      </div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Error Injection Modes</h2><span class="sec-num">§ 13.2</span></div>
+      <table class="sketch-table">
+        <thead><tr><th>Mode</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">Substitution</span></td><td>Randomly flip a base to another (e.g. A→C). Most common in long-term storage.</td></tr>
+          <tr><td><span class="mono">Deletion</span></td><td>Remove a random base; causes frame shift. Tests SYNC re-framing.</td></tr>
+          <tr><td><span class="mono">Insertion</span></td><td>Insert a random base. Also frame-shifts.</td></tr>
+          <tr><td><span class="mono">BurstError</span></td><td>Corrupt a contiguous run of N bases. Tests TMR coverage.</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">API</h2><span class="sec-num">§ 13.3</span></div>
+      <div class="code-block"><span class="code-fname">simulator usage</span>
+<pre><span class="ck">use</span> helix_sim::{ErrorInjector, InjectionConfig, InjectionMode};
+
+<span class="ck">let</span> cfg = InjectionConfig {
+    mode: InjectionMode::Substitution,
+    rate: <span class="cn">0.01</span>,  <span class="cc">// 1% base error rate</span>
+    seed: <span class="cn">42</span>,
+};
+<span class="ck">let</span> mutated = ErrorInjector::new(cfg).inject(&amp;dna);
+<span class="cc">// now decode + execute and compare results</span>
+<span class="ck">let</span> report: SimReport = run_full_pipeline(&amp;mutated);</pre></div>
+      <div class="callout tip">Run the simulator over 10,000 trials with <code>rate: 0.001</code> (0.1%) to get a statistical baseline for your algorithm's error tolerance under realistic DNA storage conditions.</div>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── EXAMPLES: ALGORITHMS ───────── -->
+<div id="page-examples-algorithms" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Algorithm Examples</div>
+    <div class="doc-header-crumb">Examples · §14</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Fibonacci</h2><span class="sec-num">§ 14.1</span></div>
+      <div class="margin-note green" style="top:50px;right:36px;font-size:11px">~252 nt<br>(21 instrs)<br>+ ECC</div>
+      <div class="code-block"><span class="code-fname">fibonacci.hx</span>
+<pre><span class="ck">.program</span> <span class="cs">"fibonacci"</span>
+<span class="ck">.version</span> <span class="cn">1</span>
+<span class="ck">.text</span>
+<span class="ck">.entry</span> main
+
+main:
+  IMML R1, <span class="cn">0</span>      <span class="cc">; a = 0</span>
+  IMML R2, <span class="cn">1</span>      <span class="cc">; b = 1</span>
+  IMML R3, <span class="cn">0</span>      <span class="cc">; i = 0</span>
+  IMML R4, <span class="cn">10</span>     <span class="cc">; n = 10</span>
+
+loop:
+  CMP  R3, R4
+  BGE  done       <span class="cc">; i ≥ 10 → stop</span>
+  ADD  R5, R1, R2 <span class="cc">; t = a + b</span>
+  ADD  R1, R2, R0 <span class="cc">; a = b</span>
+  ADD  R2, R5, R0 <span class="cc">; b = t</span>
+  INC  R3, R3     <span class="cc">; i++</span>
+  JMP  loop
+
+done:
+  HALT
+<span class="cc">; → R1 = 55  (F(10))</span></pre></div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Integer Square Root</h2><span class="sec-num">§ 14.2</span></div>
+      <div class="code-block"><span class="code-fname">isqrt.hx</span>
+<pre><span class="ck">.program</span> <span class="cs">"isqrt"</span>
+<span class="ck">.version</span> <span class="cn">1</span>
+<span class="ck">.text</span>
+<span class="ck">.entry</span> main
+
+main:
+  IMML R1, <span class="cn">144</span>   <span class="cc">; n = 144</span>
+  IMML R2, <span class="cn">0</span>     <span class="cc">; root = 0</span>
+
+loop:
+  INC  R3, R2
+  MUL  R4, R3, R3
+  CMP  R4, R1
+  BGE  done
+  ADD  R2, R3, R0
+  JMP  loop
+
+done:
+  HALT
+<span class="cc">; → R2 = 12  (√144 = 12)</span></pre></div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">GCD (Euclidean)</h2><span class="sec-num">§ 14.3</span></div>
+      <div class="code-block"><span class="code-fname">gcd.hx</span>
+<pre><span class="ck">.program</span> <span class="cs">"gcd"</span>
+<span class="ck">.version</span> <span class="cn">1</span>
+<span class="ck">.text</span>
+<span class="ck">.entry</span> main
+
+main:
+  IMML R1, <span class="cn">48</span>    <span class="cc">; a</span>
+  IMML R2, <span class="cn">36</span>    <span class="cc">; b</span>
+
+loop:
+  CMP  R2, R0    <span class="cc">; b == 0?</span>
+  BEQ  done
+  MOD  R3, R1, R2
+  ADD  R1, R2, R0
+  ADD  R2, R3, R0
+  JMP  loop
+
+done:
+  HALT
+<span class="cc">; → R1 = 12  (gcd(48,36))</span></pre></div>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── EXAMPLES: MODEL WEIGHTS ───────── -->
+<div id="page-examples-weights" class="doc-page">
+  <div class="doc-header">
+    <div class="doc-header-title">Model Weights</div>
+    <div class="doc-header-crumb">Examples · §15 — archiving neural network weights in DNA</div>
+  </div>
+  <div class="doc">
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Concept</h2><span class="sec-num">§ 15.1</span></div>
+      <div class="body-text">
+        <p>Neural network weights are just arrays of floating-point numbers. Helix can archive them by encoding a <em>weight-loader program</em> that reconstructs the weight tensor using IMML/IMMH pairs followed by STORE instructions. At retrieval time, the VM re-materialises the weights into scratch RAM.</p>
+        <p>For a tiny network (e.g. 128 weights × 16-bit fixed-point), the encoding fits in a single ECC block. For larger networks, multiple blocks are chained.</p>
+      </div>
+      <div class="callout">This is a <strong>proof-of-concept</strong> for archival, not inference. Execution on the Helix VM is O(n) in weight count — practical only for small models.</div>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Quantisation</h2><span class="sec-num">§ 15.2</span></div>
+      <div class="body-text">
+        <p>Floating-point weights are quantised to <strong>16-bit unsigned fixed-point</strong> (Q8.8 format) before encoding. Each weight <em>w</em> maps to: <code>u16 = clamp(w × 256 + 32768, 0, 65535)</code>.</p>
+      </div>
+      <table class="sketch-table">
+        <thead><tr><th>Network size</th><th>Weights</th><th>DNA length (no ECC)</th><th>With TMR</th></tr></thead>
+        <tbody>
+          <tr><td>Tiny MLP</td><td>128</td><td>≈ 3,072 nt</td><td>≈ 9,216 nt</td></tr>
+          <tr><td>Small MLP</td><td>1,024</td><td>≈ 24,576 nt</td><td>≈ 73,728 nt</td></tr>
+          <tr><td>Medium MLP</td><td>8,192</td><td>≈ 196,608 nt</td><td>≈ 589,824 nt</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="doc-section">
+      <div class="sec-head"><h2 class="sec-title">Loader Sketch</h2><span class="sec-num">§ 15.3</span></div>
+      <div class="code-block"><span class="code-fname">weight_loader.hx (excerpt)</span>
+<pre><span class="ck">.program</span> <span class="cs">"weights_tiny_mlp"</span>
+<span class="ck">.version</span> <span class="cn">1</span>
+<span class="ck">.text</span>
+<span class="ck">.entry</span> load
+
+<span class="cc">; weight[0] = 0x013F (≈ 0.246 in Q8.8)</span>
+load:
+  IMML R1, <span class="cn">63</span>   <span class="cc">; 0x3F</span>
+  IMMH R1, <span class="cn">1</span>    <span class="cc">; 0x01  → R1 = 0x013F</span>
+  IMML R2, <span class="cn">0</span>    <span class="cc">; addr 0</span>
+  STORE R2, R1  <span class="cc">; mem[0] = weight[0]</span>
+
+<span class="cc">; weight[1] = 0x00C8 (≈ 0.781 in Q8.8)</span>
+  IMML R1, <span class="cn">200</span>  <span class="cc">; 0xC8</span>
+  IMMH R1, <span class="cn">0</span>
+  IMML R2, <span class="cn">1</span>    <span class="cc">; addr 1</span>
+  STORE R2, R1
+  <span class="cc">; … repeat for all 128 weights …</span>
+  HALT</pre></div>
+    </section>
+  </div>
+</div>
+
+<!-- ───────── SHARED FOOTER ───────── -->
+<footer class="page-footer">
+  <span>Helix — Technical Documentation</span>
+  <span id="footer-page-name">Introduction</span>
+  <span>v 0.1.0 · April 2026</span>
+</footer>
+
+</main>
+</div>
+
+<script>
+const PAGE_NAMES = {
+  'introduction':'Introduction','quickstart':'Quickstart','architecture':'Architecture',
+  'isa-overview':'ISA Overview','isa-instructions':'Instruction Set','isa-assembly':'Assembly Language',
+  'ecc':'Reed-Solomon ECC','tmr':'TMR','bio':'Bio Constraints','bio-optimizer':'Bio Optimizer',
+  'assembler':'Assembler','vm':'Virtual Machine','simulator':'Simulator',
+  'examples-algorithms':'Algorithm Examples','examples-weights':'Model Weights'
+};
+
+function navigate(page) {
+  if (!page || !document.getElementById('page-' + page)) page = 'introduction';
+  document.querySelectorAll('.doc-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item[data-page]').forEach(n =>
+    n.classList.toggle('active', n.dataset.page === page));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('main-page').scrollTop = 0;
+  document.getElementById('footer-page-name').textContent = PAGE_NAMES[page] || page;
+  history.pushState(null, '', '#' + page);
+}
+
+document.querySelectorAll('.nav-item[data-page]').forEach(item =>
+  item.addEventListener('click', () => navigate(item.dataset.page)));
+window.addEventListener('popstate', () => navigate(location.hash.slice(1) || 'introduction'));
+navigate(location.hash.slice(1) || 'introduction');
+</script>
+</body>
+</html>
