@@ -2,7 +2,9 @@
 
 DNA-encoded algorithm storage and execution system.
 
-Programs are compiled to an ACGT nucleotide sequence, stored in aqueous/encapsulated DNA, retrieved, and executed on a software virtual machine.
+Programs are compiled to an ACGT nucleotide sequence, decoded back, and executed on a software virtual machine. The design targets storage in aqueous or encapsulated DNA.
+
+> **Scope:** everything in this repository runs in software. No sequence has been synthesized, stored or sequenced. The "DNA" is a string of A, C, G and T in memory, and storage errors are injected by `helix-sim` at rates you choose.
 
 ## Architecture
 
@@ -16,7 +18,7 @@ raw codons
 bio-safe codons
     │
     ▼ helix-ecc (SYNC + Reed-Solomon + TMR)
-DNA string  ──────────────────────────── aqueous/encapsulated storage
+DNA string  ──────────────────────────── (storage: simulated by helix-sim)
     │
     ▼ helix-ecc (decode: TMR vote + RS correction + SYNC resync)
 raw codons
@@ -50,7 +52,7 @@ result
 
 1. **Codon degeneracy** — opcodes 0x00–0x0F have synonymous codons
 2. **SYNC markers** — 4-codon pattern inserted every 8 instructions for frame sync
-3. **Reed-Solomon** — RS(10,8) over GF(2⁶), corrects 1 symbol error per block
+3. **Reed-Solomon** — RS(10,8) over GF(2⁶) on the opcode codon of each instruction; corrects 1 wrong opcode codon per block of 8 instructions (operand codons are protected only by TMR)
 4. **TMR** — Triple Modular Redundancy with majority vote
 
 ### Bio-Safety Constraints
@@ -73,13 +75,13 @@ cargo build --workspace -j4
 # Assemble a program (outputs DNA string)
 cargo run --bin helix-asm -- examples/fibonacci.hx
 
-# Assemble and run (pipe DNA into the VM)
-cargo run --bin helix-asm -- examples/fibonacci.hx --no-tmr 2>/dev/null | \
-  cargo run --bin helix-vm --
+# Assemble and run (pass the DNA string to the VM)
+cargo run --bin helix-vm -- \
+  "$(cargo run --bin helix-asm -- examples/fibonacci.hx 2>/dev/null)"
 
 # Simulate DNA storage errors
 cargo run --bin helix-sim -- \
-  "$(cargo run --bin helix-asm -- examples/gcd.hx --no-tmr 2>/dev/null)" \
+  "$(cargo run --bin helix-asm -- examples/gcd.hx 2>/dev/null)" \
   --sub-rate 0.005 --runs 50
 
 # Run model weights demo
@@ -96,6 +98,12 @@ Programs in `examples/` use the Helix assembly language (`.hx`):
 | `gcd.hx` | Euclidean GCD | R1 = GCD(48, 18) = 6 |
 | `sum_array.hx` | Array summation | R3 = 150 |
 | `bubble_sort.hx` | Bubble sort | arr[0..7] sorted in-place |
+
+These results are checked by the in-memory tests (`helix-vm/tests`, `helix-asm/tests`), which load the
+data section directly. Through the DNA string, `fibonacci` and `gcd` give the results above; `sum_array`
+and `bubble_sort` do not yet, because the `.data` section is not encoded into the DNA in v0.1.0, and
+`bubble_sort` with TMR also hits a separator bug (the `TGA` separator codon can occur inside the body).
+Both are scheduled for the next release.
 
 ### Assembly Language (`.hx`)
 
@@ -133,7 +141,8 @@ The `helix-vm/examples/weights.rs` demo shows how neural network weights can be 
 - Quantize f32 weights → 6-bit values (0–63, one value per codon)
 - Encode as 3 nucleotides per weight
 - 20 weights → 60 nucleotides
-- MSE from 6-bit quantization: ~0.0001
+- MSE from 6-bit quantization: 0.0000629 for the demo's 20 values
+- No error correction is applied in this demo
 
 ```bash
 cargo run --example weights --manifest-path helix-vm/Cargo.toml

@@ -313,7 +313,7 @@ pre{margin:0;white-space:pre;overflow-x:auto}
 <div id="page-introduction" class="doc-page active">
   <header class="hero">
     <div class="hero-coffee"></div>
-    <div class="hero-stamp">v 0.1.0<br>Apr 2026<br>◉<br>DRAFT</div>
+    <div class="hero-stamp">v 0.1.0<br>Nov 2026<br>◉<br>SIMULATED</div>
     <div class="hero-margin">§ see SPEC.md for full spec →</div>
     <div class="hero-logo-mark">
       <svg viewBox="0 0 80 80" width="68" height="68" xmlns="http://www.w3.org/2000/svg">
@@ -341,7 +341,7 @@ pre{margin:0;white-space:pre;overflow-x:auto}
         <path d="M2 5 Q15 2 30 5 Q45 8 60 5 Q75 2 90 5 Q105 8 120 5 Q135 2 150 5 Q165 8 180 5 Q195 2 210 5 Q225 8 240 5 Q255 2 270 5 Q285 8 298 5" stroke="#b71c1c" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".65"/>
       </svg>
     </h1>
-    <p class="hero-sub">Programs encoded as synthetic DNA sequences. Compile your algorithm to ACGT — store it for 10,000 years — retrieve and execute.</p>
+    <p class="hero-sub">Programs encoded as DNA sequences. Compile your algorithm to ACGT, decode it back and execute it. Storage and errors are simulated in software.</p>
     <div class="hero-pills">
       <span class="pill">6 crates</span><span class="pill">32 opcodes</span>
       <span class="pill">Reed-Solomon ECC</span><span class="pill">bio-safe output</span><span class="pill">159 tests</span>
@@ -376,12 +376,11 @@ pre{margin:0;white-space:pre;overflow-x:auto}
   <div class="doc">
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">What is Helix?</h2><span class="sec-num">§ 1.0</span></div>
-      <div class="margin-note" style="top:18px;right:36px;font-size:11px">DNA density:<br><strong>215 PB/gram</strong><br>vs Flash:<br>~1 TB/cm³</div>
       <div class="body-text">
-        <p>Helix is a system for encoding executable algorithms as synthetic DNA sequences. Programs are compiled to an <code>ACGT</code> nucleotide string, persisted in DNA, retrieved via sequencing, and executed on a software virtual machine.</p>
-        <p>The goal: store fundamental algorithms — sorting, searching, arithmetic — in a physical medium with a <em>10,000-year shelf life</em>, and retrieve them intact decades later.</p>
+        <p>Helix is a system for encoding executable algorithms as synthetic DNA sequences. Programs are compiled to an <code>ACGT</code> nucleotide string, decoded back, and executed on a software virtual machine.</p>
+        <p>The design goal is to store fundamental algorithms (sorting, searching, arithmetic) in synthetic DNA. <strong>Everything in v0.1.0 runs in software:</strong> no sequence has been synthesized, stored or sequenced, and storage errors are injected by <code>helix-sim</code> at rates you choose.</p>
       </div>
-      <div class="callout">Helix is <strong>not</strong> biological computation. It uses DNA as a storage medium — the same way you'd use tape or flash — but with far superior density and longevity.</div>
+      <div class="callout">Helix is <strong>not</strong> biological computation. It uses DNA as a storage medium, the same way you'd use tape or flash.</div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">The Pipeline</h2><span class="sec-num">§ 1.1</span></div>
@@ -446,7 +445,7 @@ pre{margin:0;white-space:pre;overflow-x:auto}
           <tr><td><span class="reg-label">R7</span></td><td>ACC</td><td>Accumulator / return value</td></tr>
         </tbody>
       </table>
-      <div class="callout" style="margin-top:18px;font-size:13px">Instruction format: <strong>4 codons = 24 bits = 12 nucleotides</strong> per instruction. Fixed-width — frame loss is recoverable via SYNC markers.</div>
+      <div class="callout" style="margin-top:18px;font-size:13px">Instruction format: <strong>4 codons = 24 bits = 12 nucleotides</strong> per instruction. Fixed-width. SYNC markers mark block starts; in v0.1.0 they are searched at codon-aligned positions only, so a single inserted or deleted base is not re-framed.</div>
     </section>
   </div>
 </div>
@@ -606,7 +605,7 @@ cpu.execute(&amp;prog).unwrap();</pre></div>
       <div class="body-text">
         <p>The Helix ISA is optimised for DNA storage, not speed. Every design decision trades execution efficiency for storage robustness:</p>
         <ul>
-          <li><strong>Fixed-width instructions</strong> — 4 codons each; frame loss is recoverable</li>
+          <li><strong>Fixed-width instructions</strong> — 4 codons each, so block boundaries are predictable</li>
           <li><strong>Small opcode space</strong> — 32 opcodes (5 bits); leaves room for bio-safe codon selection</li>
           <li><strong>No memory-mapped I/O</strong> — LOAD/STORE address a small scratch RAM only</li>
           <li><strong>Relative branches</strong> — signed 8-bit offsets; no absolute addresses in DNA</li>
@@ -816,7 +815,7 @@ main:
         <p>TMR stores <strong>three copies</strong> of the encoded DNA sequence and takes a majority vote at decode time. If two copies agree, the third is considered corrupt and the majority value wins.</p>
         <p>TMR is the outer layer of ECC — it handles burst errors that span an entire RS block, which RS alone cannot correct.</p>
       </div>
-      <div class="callout">TMR triples the storage cost. For long-term archival this is acceptable — DNA synthesis costs continue to fall ~50% per year.</div>
+      <div class="callout">TMR triples the length of the stored sequence.</div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Voting Logic</h2><span class="sec-num">§ 8.2</span></div>
@@ -855,7 +854,7 @@ main:
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Why Constraints?</h2><span class="sec-num">§ 9.1</span></div>
       <div class="body-text">
-        <p>Synthetic DNA that violates synthesis or sequencing constraints will fail in the lab, even if the encoding is logically correct. Helix enforces four categories of bio-physical constraints before output.</p>
+        <p>Some sequence patterns are known to be hard to synthesize or sequence. Helix checks four categories of constraints in software before output. They have not been tested against a synthesizer.</p>
       </div>
     </section>
     <section class="doc-section">
@@ -869,7 +868,7 @@ main:
           <tr><td>Tandem repeat</td><td>no unit &gt; 8 nt repeated &gt; 3×</td><td>PCR amplification artefacts</td></tr>
         </tbody>
       </table>
-      <div class="callout warn">These constraints are <strong>not optional</strong> for physical synthesis. Skipping the bio check will produce sequences that cannot be synthesised by current providers.</div>
+      <div class="callout warn">The optimizer does not always clear every violation: on the four example programs, 8 to 60 remain. It also runs before ECC is added, so SYNC, parity and TMR copies are not checked.</div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Lint API</h2><span class="sec-num">§ 9.3</span></div>
@@ -908,7 +907,7 @@ main:
           <li><strong>Hairpin avoidance</strong> — compute approximate ΔG; if below threshold, reverse-complement the offending region using synonyms where possible</li>
         </ul>
       </div>
-      <div class="callout">The optimizer is a lint pass only — it reports violations but does <em>not</em> automatically rewrite sequences. Automatic rewriting is on the roadmap.</div>
+      <div class="callout">The optimizer rewrites opcode codons to their synonyms (opcodes 0x00 to 0x0F have one each) and reports the violations that remain.</div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Modules</h2><span class="sec-num">§ 10.3</span></div>
@@ -1024,7 +1023,7 @@ println!(<span class="cs">"R1 = {}"</span>, regs[<span class="cn">1</span>]);</p
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">What is helix-sim?</h2><span class="sec-num">§ 13.1</span></div>
       <div class="body-text">
-        <p><code>helix-sim</code> is a chaos / fault-injection harness. It simulates the DNA storage medium by randomly mutating a <code>DnaSequence</code> according to a configurable error model, then runs the full decode+execute pipeline to measure error resilience.</p>
+        <p><code>helix-sim</code> is a chaos / fault-injection harness. It simulates the DNA storage medium by randomly mutating a <code>DnaSequence</code> according to a configurable error model, decodes it, and counts how many decoded instructions equal the originals. It does not execute the program.</p>
       </div>
     </section>
     <section class="doc-section">
