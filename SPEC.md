@@ -1,8 +1,8 @@
 # Helix — DNA-Encoded Instruction Set Architecture
 
-> **Status (v0.1.0).** This document is the design. Everything in the repository
+> **Status (v0.1.1).** This document is the design. Everything in the repository
 > runs in software: no sequence has been synthesized, stored or sequenced, and
-> storage errors exist only as `helix-sim` injections. Implemented in v0.1.0:
+> storage errors exist only as `helix-sim` injections. Implemented in v0.1.1:
 > the ISA and codon mapping (sections 2 to 4), the GC, homopolymer, dinucleotide
 > repeat and palindrome checks with synonymous-codon swaps (5.2, partly 5.3),
 > SYNC markers, Reed-Solomon over opcode codons and TMR (section 6), the
@@ -10,10 +10,13 @@
 > CRC and PCR primers (section 7), output formats other than a raw DNA string
 > (8.3), the melting-temperature and inverted-repeat checks and NOP spacers
 > (5.2, 5.3), the `--profile cell` rules (5.5), and the wet-lab steps of the
-> walkthrough (section 13). Known gaps in v0.1.0: the `.data` section is not
-> encoded into the DNA; the TMR separator codon `TGA` can occur inside the body;
-> SYNC search runs at codon-aligned positions only, so a single insertion or
-> deletion is not re-framed.
+> walkthrough (section 13). Known gap: SYNC search runs at codon-aligned
+> positions only, so a single insertion or deletion is not re-framed.
+>
+> Changed in v0.1.1: the `.data` section and a non-zero `.entry` now travel in
+> the DNA as a loader prologue (8.2); TMR copies are stored back to back and
+> split by length instead of by a `TGA` separator, which could also occur
+> inside instructions (6.2, layer 4); v0.1.0 strands still decode.
 
 ## 1. Overview
 
@@ -235,8 +238,9 @@ The mapping from 64 DNA codons to ISA values is designed with these priorities:
 | TGA       | 111000  | SECTION_SEPARATOR   |
 
 Design intent: these codons should not appear in instruction opcode positions.
-In v0.1.0 only `TGA` is used (as the TMR section separator), and `ATG`
-(value 14) is the primary codon of LOAD, so this table is not yet enforced.
+In v0.1.x none of these markers is written (v0.1.0 used `TGA` as the TMR
+separator; v0.1.1 only reads it in old strands), and `ATG` (value 14) is the
+primary codon of LOAD, so this table is not enforced.
 
 ### 4.2 Degeneracy (Synonymous Codons)
 
@@ -248,7 +252,7 @@ provides:
 - **Bio-safety tuning** — the assembler can choose among synonymous codons to
   fix GC content, avoid restriction sites, or break homopolymer runs.
 
-In v0.1.0 (`helix-isa/src/table.rs`), opcodes 0x00–0x0F each have one
+In v0.1.x (`helix-isa/src/table.rs`), opcodes 0x00–0x0F each have one
 synonymous codon (the opcode value + 32, which changes the first base from A
 to G); opcodes 0x10–0x1F have no synonym.
 
@@ -372,7 +376,7 @@ Design intent: synonymous codons are assigned such that single-nucleotide
 substitutions within a codon either still decode to the same value (silent
 mutation) or decode to an invalid/detectable value.
 
-In v0.1.0 codon values are plain binary, so this holds only partly: for opcodes
+In v0.1.x codon values are plain binary, so this holds only partly: for opcodes
 0x00–0x0F, a substitution that turns the first base into its synonym's first
 base is silent, while most other substitutions produce a different valid opcode
 (for example `AAA` ADD becomes `CAA` PUSH).
@@ -402,23 +406,28 @@ instructions treated as symbols in GF(2^6).
 [SYNC][I0][I1][I2][I3][I4][I5][I6][I7][ECCP]
 ```
 
-In v0.1.0 the Reed-Solomon symbols are the opcode codons (codon 0) of the 8
+In v0.1.x the Reed-Solomon symbols are the opcode codons (codon 0) of the 8
 data instructions, and one ECCP instruction carries both parity symbols in its
 last two codons. This corrects 1 wrong opcode codon per block. Operand codons
 are not covered by RS; only TMR protects them.
 
 #### Layer 4: Triple Modular Redundancy (TMR)
 
-The entire program is stored as 3 independent copies on the DNA strand,
-separated by SECTION_SEPARATOR codons (TGA). The decoder reads all three and
-performs majority voting at the instruction level.
+The entire program is stored as 3 independent copies on the DNA strand. The
+decoder reads all three and performs majority voting per codon.
 
 ```
 5'─[PRIMER]─[HEADER]─[COPY_A]─TGA─[COPY_B]─TGA─[COPY_C]─[FOOTER]─[PRIMER]─3'
 ```
 
-In v0.1.0 the strand is `[COPY_A]─TGA─[COPY_B]─TGA─[COPY_C]` (no primers,
-header or footer yet).
+In v0.1.1 the strand is `[COPY_A][COPY_B][COPY_C]`, back to back with no
+primers, header, footer or separators. The decoder splits it into thirds by
+length; every copy is a whole number of 40-codon blocks, so a stream of `3L`
+codons splits exactly. A stream in the v0.1.0 layout (`3L + 2` codons with
+`TGA` at positions `L` and `2L + 1`) is still accepted. Any other length means
+codons were inserted or deleted, and decoding fails. The `TGA` separator was
+dropped because value 56 can also occur inside instruction fields, where it
+cut a copy apart.
 
 For algorithms where strand space is limited, TMR can be reduced to 2 copies
 (detection only) or omitted (relying on RS codes alone).
@@ -442,7 +451,7 @@ Raw nucleotide sequence
 
 ## 7. Program Structure on DNA
 
-> **Planned.** Primers, header and footer are not implemented in v0.1.0. The
+> **Planned.** Primers, header and footer are not implemented in v0.1.x. The
 > strand is the ECC body only (section 7.3), repeated three times when TMR is on.
 
 ### 7.1 Strand Layout
@@ -559,6 +568,7 @@ end_inner:
     │
     ├──▶ Parse (labels, directives, instructions)
     ├──▶ Resolve labels to offsets
+    ├──▶ Prepend the loader prologue (v0.1.1: .data words and .entry)
     ├──▶ Encode instructions to binary (24-bit words)
     ├──▶ Group into blocks, insert SYNC markers
     ├──▶ Compute RS parity per block
@@ -572,9 +582,21 @@ end_inner:
     └──▶ Output: DNA sequence (.dna file) + assembly listing (.lst)
 ```
 
+In v0.1.1 the order is: parse, resolve, prologue, encode, bio swaps, SYNC and
+RS per block, TMR. Header, footer, primers and the output files below are
+planned.
+
+**Loader prologue (v0.1.1).** The DNA carries only instructions, so the data
+section travels as code that writes it. For each `.data` word the assembler
+emits `IMML R7, lo; IMMH R7, hi; STORE R6, R7; INC R6, R6`, storing the words
+at addresses 0, 1, 2, ...; then `ADD R6, R0, R0` and `ADD R7, R0, R0` reset
+the two scratch registers. If `.entry` is not the first instruction, a `JMP`
+to it follows. None of these instructions changes the flags. A program with
+no data and entry 0 gets no prologue, so its DNA is unchanged.
+
 ### 8.3 Output Formats
 
-> **Planned.** v0.1.0 writes only the raw DNA string (to stdout or `-o FILE`),
+> **Planned.** v0.1.x writes only the raw DNA string (to stdout or `-o FILE`),
 > with a summary on stderr.
 
 | Format  | Extension | Description                              |
@@ -617,13 +639,15 @@ The Helix VM decodes and executes DNA sequences in software.
 ### 9.2 Execution Lifecycle
 
 1. Load `.dna` file
-2. Strip primers
-3. Parse header, validate magic and checksum
-4. If TMR: separate copies, majority vote
-5. For each block: validate SYNC, RS-decode, extract instructions
-6. Load data section into memory starting at address 0
-7. Set PC to entry point
-8. Execute fetch-decode-execute loop until HALT or TRAP
+2. Strip primers (planned)
+3. Parse header, validate magic and checksum (planned)
+4. If TMR: split into three copies by length, majority vote
+5. For each block: find SYNC, RS-decode, extract instructions
+6. Fail if no instructions were decoded
+7. Execute from instruction 0; the loader prologue (8.2) writes the data
+   section and jumps to the entry point
+8. Execute fetch-decode-execute loop until HALT or TRAP (`helix-vm` exits
+   with status 1 on a trap; `--trace` prints every instruction)
 
 ### 9.3 Traps and Errors
 
@@ -754,19 +778,18 @@ helix/
 ### Input: bubble_sort.hx
 (See Section 8.1 for source)
 
-### Step 1: Assemble (v0.1.0, real output)
+### Step 1: Assemble (v0.1.1, real output)
 ```
 $ helix-asm examples/gcd.hx -o gcd.dna
 [ASM] program: gcd
 [ASM] instructions: 9
-[ASM] DNA length: 726 nt
+[ASM] DNA length: 720 nt
 [ASM] bio swaps: 5, violations remaining: 8
 ```
 
-726 nt = 2 blocks (one padded) × 40 codons × 3 nt, three TMR copies plus two
-`TGA` separators.
+720 nt = 3 TMR copies × 2 blocks (one padded with NOPs) × 40 codons × 3 nt.
 
-### Step 2: Execute (v0.1.0, real output)
+### Step 2: Execute (v0.1.1, real output)
 ```
 $ helix-vm gcd.dna
 [LOAD] 16 instructions, entry=0
@@ -775,21 +798,21 @@ $ helix-vm gcd.dna
 [EXIT] OK
 ```
 
-### Step 3: Simulated error test (v0.1.0, real output)
+### Step 3: Simulated error test (v0.1.1, real output)
 ```
 $ helix-sim gcd.dna
-Program: 16 instructions, 726 nt
+Program: 16 instructions, 720 nt
 Running 1 simulation(s)...
 === Simulation Report ===
-Original:  726 nt
-Corrupted: 725 nt
+Original:  720 nt
+Corrupted: 719 nt
 Errors:    1 subs, 1 dels, 0 ins (total: 2)
 Recovery:  0/16 instructions (0.0%)
 ECC ok:    false
 Output match: false
 ```
 
-With the default seed (42) this run includes one deletion, which v0.1.0 cannot
+With the default seed (42) this run includes one deletion, which v0.1.x cannot
 re-frame (see the status note at the top). "Recovery" and "Output match"
 compare decoded instructions with the originals; the program is not executed.
 

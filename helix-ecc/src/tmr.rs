@@ -1,43 +1,53 @@
 use helix_isa::Codon;
 
 // Triple Modular Redundancy: majority-vote over 3 copies of a codon stream.
-// Each copy is separated by the SECTION_SEPARATOR codon (TGA = 0b111000 = 56).
-// The decoder aligns the 3 copies and takes the majority value per codon.
+//
+// Since v0.1.1 the three copies are stored back to back with no separator, and
+// the decoder splits the stream by length (each copy is exactly one third).
+// v0.1.0 put the SECTION_SEPARATOR codon (TGA = 0b111000 = 56) between the
+// copies, but that value can also occur inside instruction fields, so a
+// separator search could cut a copy apart. Streams in the v0.1.0 layout
+// (3L + 2 codons with TGA at positions L and 2L + 1) are still accepted.
 
+/// The v0.1.0 separator codon (TGA). No longer written; accepted when decoding.
 pub const SECTION_SEP: u8 = 0x38; // TGA = 0b111000 = 56
 
 pub fn section_separator() -> Codon {
     Codon::new(SECTION_SEP)
 }
 
-/// Interleave 3 copies with SECTION_SEP between them.
+/// Store 3 copies of `body` back to back.
 pub fn encode_tmr(body: &[Codon]) -> Vec<Codon> {
-    let sep = section_separator();
-    let mut out = Vec::with_capacity(body.len() * 3 + 2);
+    let mut out = Vec::with_capacity(body.len() * 3);
     out.extend_from_slice(body);
-    out.push(sep);
     out.extend_from_slice(body);
-    out.push(sep);
     out.extend_from_slice(body);
     out
 }
 
-/// Split a TMR-encoded stream into up to 3 copies by SECTION_SEP.
-pub fn split_copies(stream: &[Codon]) -> Vec<Vec<Codon>> {
-    let mut copies: Vec<Vec<Codon>> = Vec::new();
-    let mut current: Vec<Codon> = Vec::new();
-    for &c in stream {
-        if c.value() == SECTION_SEP {
-            copies.push(current);
-            current = Vec::new();
-        } else {
-            current.push(c);
+/// Split a TMR stream into its 3 copies by length.
+///
+/// Returns `None` if the length fits neither layout: `3L` codons (v0.1.1) or
+/// `3L + 2` codons with TGA at positions `L` and `2L + 1` (v0.1.0). A length
+/// that fits neither means codons were inserted or deleted, and the copies
+/// cannot be aligned.
+pub fn split_copies(stream: &[Codon]) -> Option<[&[Codon]; 3]> {
+    let n = stream.len();
+    if n.is_multiple_of(3) {
+        let l = n / 3;
+        return Some([&stream[..l], &stream[l..2 * l], &stream[2 * l..]]);
+    }
+    if n >= 2 && (n - 2).is_multiple_of(3) {
+        let l = (n - 2) / 3;
+        if stream[l].value() == SECTION_SEP && stream[2 * l + 1].value() == SECTION_SEP {
+            return Some([
+                &stream[..l],
+                &stream[l + 1..2 * l + 1],
+                &stream[2 * l + 2..],
+            ]);
         }
     }
-    if !current.is_empty() {
-        copies.push(current);
-    }
-    copies
+    None
 }
 
 /// Majority vote over up to 3 copies. For each codon position, pick the value
@@ -99,9 +109,9 @@ mod tests {
     fn encode_decode_tmr_no_error() {
         let body = codons(&[0x01, 0x0F, 0x10, 0x1C]);
         let encoded = encode_tmr(&body);
-        let copies = split_copies(&encoded);
-        assert_eq!(copies.len(), 3);
-        let (voted, corrections) = majority_vote(&copies);
+        assert_eq!(encoded.len(), 3 * body.len());
+        let copies = split_copies(&encoded).unwrap();
+        let (voted, corrections) = majority_vote(&copies.map(|c| c.to_vec()));
         assert_eq!(voted, body);
         assert_eq!(corrections, 0);
     }
@@ -130,16 +140,37 @@ mod tests {
     }
 
     #[test]
-    fn split_two_copies_from_stream() {
-        let body = codons(&[0x01, 0x02]);
+    fn separator_value_inside_body_is_not_a_split_point() {
+        // v0.1.0 bug: TGA (56) inside a copy cut it apart.
+        let body = codons(&[0x01, SECTION_SEP, 0x10, SECTION_SEP, 0x1C]);
+        let encoded = encode_tmr(&body);
+        let copies = split_copies(&encoded).unwrap();
+        for copy in copies {
+            assert_eq!(copy, body.as_slice());
+        }
+    }
+
+    #[test]
+    fn v010_layout_with_separators_still_splits() {
+        let body = codons(&[0x01, 0x02, 0x03]);
         let sep = section_separator();
         let mut stream = body.clone();
         stream.push(sep);
         stream.extend_from_slice(&body);
+        stream.push(sep);
+        stream.extend_from_slice(&body);
 
-        let copies = split_copies(&stream);
-        assert_eq!(copies.len(), 2);
-        assert_eq!(copies[0], body);
-        assert_eq!(copies[1], body);
+        let copies = split_copies(&stream).unwrap();
+        for copy in copies {
+            assert_eq!(copy, body.as_slice());
+        }
+    }
+
+    #[test]
+    fn length_that_fits_no_layout_is_rejected() {
+        let body = codons(&[0x01, 0x02, 0x03]);
+        let mut stream = encode_tmr(&body);
+        stream.pop(); // one codon lost: 8 codons, not 3L or 3L + 2 with separators
+        assert!(split_copies(&stream).is_none());
     }
 }

@@ -8,7 +8,7 @@ use helix_isa::{Codon, DnaSequence};
 
 fn main() {
     // A tiny 2-layer MLP: input(4) → hidden(4) → output(1)
-    // 4×4 weight matrix (16 weights) + 4×1 weight vector (4 weights) + 1 bias
+    // 4×4 weight matrix (16 weights) + 4×1 weight vector (4 weights)
     let weights: Vec<f32> = vec![
         // Layer 1: 4×4 weight matrix
         0.42, -0.31, 0.17, -0.89, 0.55, 0.12, -0.44, 0.73, -0.23, 0.68, 0.11, -0.51, 0.37, -0.19,
@@ -87,7 +87,7 @@ fn main() {
     println!("  f32 (32-bit):  {} bytes", weights.len() * 4);
     println!("  int8 (8-bit):  {} bytes", weights.len());
     println!(
-        "  Helix 6-bit:   {} nucleotides ≈ {:.1} bytes (1.5 bits/nt × 3 nt/weight)",
+        "  Helix 6-bit:   {} nucleotides ≈ {:.1} bytes (2 bits/nt × 3 nt/weight)",
         dna.len(),
         dna.len() as f32 * 2.0 / 8.0
     );

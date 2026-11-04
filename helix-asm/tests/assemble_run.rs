@@ -180,3 +180,71 @@ end:
     let cpu = assemble_and_run(src);
     assert_eq!(cpu.regs[1], 5);
 }
+
+// ── DNA path (v0.1.1): data section and entry point travel inside the DNA ──
+
+/// Assemble with TMR and bio optimization on, then load only from the DNA
+/// string: no `load_data`, no `pc = entry`.
+fn run_from_dna(src: &str) -> Cpu {
+    let cfg = EccConfig::default(); // TMR on, block size 8
+    let out = Assembler::new(cfg, true).assemble(src).unwrap();
+    let prog = ProgramLoader::new(cfg).from_dna_string(&out.dna).unwrap();
+    let mut cpu = Cpu::new(Memory::new());
+    cpu.run(&prog.instructions).unwrap();
+    cpu
+}
+
+#[test]
+fn sum_array_through_dna_r3_equals_150() {
+    let cpu = run_from_dna(include_str!("../../examples/sum_array.hx"));
+    assert_eq!(cpu.regs[3], 150);
+    // The prologue's scratch registers are reset before the program starts.
+    assert_eq!(cpu.regs[6], 0);
+}
+
+#[test]
+fn bubble_sort_through_dna_sorts_the_array() {
+    let cpu = run_from_dna(include_str!("../../examples/bubble_sort.hx"));
+    let sorted: Vec<u16> = (0..8).map(|a| cpu.memory.load(a).unwrap()).collect();
+    assert_eq!(sorted, vec![1, 2, 3, 4, 5, 7, 8, 9]);
+}
+
+#[test]
+fn non_zero_entry_through_dna_skips_earlier_instructions() {
+    let src = r#"
+.text
+.entry main
+    IMML R1, 0xFF  ; must not run
+main:
+    IMML R2, 42
+    HALT
+"#;
+    let cpu = run_from_dna(src);
+    assert_eq!(cpu.regs[1], 0);
+    assert_eq!(cpu.regs[2], 42);
+}
+
+#[test]
+fn data_word_with_high_byte_through_dna() {
+    let src = r#"
+.data
+w: .words 4660, 7   ; 4660 = 0x1234, needs the high byte
+.text
+.entry main
+main:
+    IMML R1, 0
+    LOAD R2, R1
+    INC  R1, R1
+    LOAD R3, R1
+    HALT
+"#;
+    let cpu = run_from_dna(src);
+    assert_eq!(cpu.regs[2], 0x1234);
+    assert_eq!(cpu.regs[3], 7);
+}
+
+#[test]
+fn programs_without_data_have_no_prologue() {
+    let out = Assembler::default().assemble(FIBONACCI).unwrap();
+    assert_eq!(out.prologue_len, 0);
+}

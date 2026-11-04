@@ -39,6 +39,8 @@ pub enum EccError {
     RsDecode(#[from] reed_solomon::RsError),
     #[error("not enough data to form a complete block")]
     Truncated,
+    #[error("TMR stream of {0} codons cannot be split into 3 equal copies")]
+    TmrLength(usize),
 }
 
 /// Encodes a flat stream of instruction codons into an ECC-protected codon sequence.
@@ -133,11 +135,8 @@ impl EccDecoder {
     pub fn decode(&self, encoded: &[Codon]) -> Result<Vec<Codon>, EccError> {
         // Step 1: TMR majority vote if enabled.
         let body: Vec<Codon> = if self.config.tmr {
-            let copies = tmr::split_copies(encoded);
-            if copies.is_empty() {
-                return Ok(Vec::new());
-            }
-            let (voted, _corrections) = tmr::majority_vote(&copies);
+            let copies = tmr::split_copies(encoded).ok_or(EccError::TmrLength(encoded.len()))?;
+            let (voted, _corrections) = tmr::majority_vote(&copies.map(|c| c.to_vec()));
             voted
         } else {
             encoded.to_vec()

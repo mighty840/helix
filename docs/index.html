@@ -299,7 +299,7 @@ pre{margin:0;white-space:pre;overflow-x:auto}
   <div class="nav-grp">
     <div class="nav-grp-lbl">Examples</div>
     <div class="nav-item" data-page="examples-algorithms"><span class="wtape" style="background:var(--tape-peach)"></span>Algorithms</div>
-    <div class="nav-item" data-page="examples-weights"><span class="wtape" style="background:var(--tape-peach)"></span>Model Weights</div>
+    <div class="nav-item" data-page="examples-weights"><span class="wtape" style="background:var(--tape-peach)"></span>Quantized Values</div>
   </div>
 
   <div class="s-coffee"></div>
@@ -313,7 +313,7 @@ pre{margin:0;white-space:pre;overflow-x:auto}
 <div id="page-introduction" class="doc-page active">
   <header class="hero">
     <div class="hero-coffee"></div>
-    <div class="hero-stamp">v 0.1.0<br>Nov 2026<br>◉<br>SIMULATED</div>
+    <div class="hero-stamp">v 0.1.1<br>Nov 2026<br>◉<br>SIMULATED</div>
     <div class="hero-margin">§ see SPEC.md for full spec →</div>
     <div class="hero-logo-mark">
       <svg viewBox="0 0 80 80" width="68" height="68" xmlns="http://www.w3.org/2000/svg">
@@ -344,7 +344,7 @@ pre{margin:0;white-space:pre;overflow-x:auto}
     <p class="hero-sub">Programs encoded as DNA sequences. Compile your algorithm to ACGT, decode it back and execute it. Storage and errors are simulated in software.</p>
     <div class="hero-pills">
       <span class="pill">6 crates</span><span class="pill">32 opcodes</span>
-      <span class="pill">Reed-Solomon ECC</span><span class="pill">bio-safe output</span><span class="pill">159 tests</span>
+      <span class="pill">Reed-Solomon ECC</span><span class="pill">bio-safety linter</span><span class="pill">168 tests</span>
     </div>
     <svg class="hero-dna" viewBox="0 0 80 220" width="72" height="220" xmlns="http://www.w3.org/2000/svg">
       <defs><filter id="helix-wob"><feTurbulence type="turbulence" baseFrequency="0.032" numOctaves="2" result="n" seed="5"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G"/></filter></defs>
@@ -378,7 +378,7 @@ pre{margin:0;white-space:pre;overflow-x:auto}
       <div class="sec-head"><h2 class="sec-title">What is Helix?</h2><span class="sec-num">§ 1.0</span></div>
       <div class="body-text">
         <p>Helix is a system for encoding executable algorithms as synthetic DNA sequences. Programs are compiled to an <code>ACGT</code> nucleotide string, decoded back, and executed on a software virtual machine.</p>
-        <p>The design goal is to store fundamental algorithms (sorting, searching, arithmetic) in synthetic DNA. <strong>Everything in v0.1.0 runs in software:</strong> no sequence has been synthesized, stored or sequenced, and storage errors are injected by <code>helix-sim</code> at rates you choose.</p>
+        <p>The design goal is to store fundamental algorithms (sorting, searching, arithmetic) in synthetic DNA. <strong>Everything in Helix runs in software:</strong> no sequence has been synthesized, stored or sequenced, and storage errors are injected by <code>helix-sim</code> at rates you choose.</p>
       </div>
       <div class="callout">Helix is <strong>not</strong> biological computation. It uses DNA as a storage medium, the same way you'd use tape or flash.</div>
     </section>
@@ -411,7 +411,7 @@ pre{margin:0;white-space:pre;overflow-x:auto}
           <text x="515" y="93" text-anchor="middle" font-family="Special Elite,cursive" font-size="10" fill="#a0620c">ACGTGCAT…</text>
           <text x="515" y="104" text-anchor="middle" font-family="Kalam,cursive" font-size="9" fill="#a0620c" font-style="italic">stored / retrieved</text>
           <text x="361" y="166" text-anchor="middle" font-family="Caveat,cursive" font-size="15" fill="#1a3a6e" font-weight="700">helix-ecc</text>
-          <text x="361" y="179" text-anchor="middle" font-family="Kalam,cursive" font-size="9" fill="#8b7b6e">correct · resync</text>
+          <text x="361" y="179" text-anchor="middle" font-family="Kalam,cursive" font-size="9" fill="#8b7b6e">vote · correct</text>
           <text x="361" y="188" text-anchor="middle" font-family="Kalam,cursive" font-size="9" fill="#1a3a6e" font-style="italic">decode</text>
           <text x="214" y="166" text-anchor="middle" font-family="Caveat,cursive" font-size="15" fill="#831843" font-weight="700">helix-vm</text>
           <text x="214" y="180" text-anchor="middle" font-family="Kalam,cursive" font-size="9.5" fill="#8b7b6e">execute · result</text>
@@ -459,27 +459,31 @@ pre{margin:0;white-space:pre;overflow-x:auto}
   <div class="doc">
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Prerequisites</h2><span class="sec-num">§ 2.1</span></div>
-      <div class="body-text"><p>Rust <strong>1.74+</strong> (stable). The workspace builds with <code>cargo build --workspace</code>.</p>
-      <ul><li>No C dependencies, no unsafe code</li><li>All 159 tests pass on stable Rust</li><li>Linux / macOS / Windows (tested on Linux)</li></ul></div>
+      <div class="body-text"><p>Rust stable (tested with 1.97). The workspace builds with <code>cargo build --workspace</code>.</p>
+      <ul><li>No C dependencies, no unsafe code</li><li><code>cargo test --workspace</code> runs the full test suite</li><li>Tested on Linux only</li></ul></div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Add to your project</h2><span class="sec-num">§ 2.2</span></div>
       <div class="code-block"><span class="code-fname">Cargo.toml</span>
 <pre><span class="ck">[dependencies]</span>
-<span class="cs">helix-asm</span> = { git = <span class="cs">"https://github.com/mighty840/helix"</span> }
-<span class="cs">helix-vm</span>  = { git = <span class="cs">"https://github.com/mighty840/helix"</span> }
-<span class="cc"># optional: ECC round-trip</span>
-<span class="cs">helix-ecc</span> = { git = <span class="cs">"https://github.com/mighty840/helix"</span> }
-<span class="cs">helix-bio</span> = { git = <span class="cs">"https://github.com/mighty840/helix"</span> }</pre></div>
+<span class="cs">helix-asm</span> = { git = <span class="cs">"https://github.com/mighty840/helix"</span>, tag = <span class="cs">"v0.1.1"</span> }
+<span class="cs">helix-ecc</span> = { git = <span class="cs">"https://github.com/mighty840/helix"</span>, tag = <span class="cs">"v0.1.1"</span> }
+<span class="cs">helix-vm</span>  = { git = <span class="cs">"https://github.com/mighty840/helix"</span>, tag = <span class="cs">"v0.1.1"</span> }
+<span class="cs">anyhow</span> = <span class="cs">"1"</span>
+<span class="cc"># optional: lower-level round trip, bio linting, simulation</span>
+<span class="cs">helix-isa</span> = { git = <span class="cs">"https://github.com/mighty840/helix"</span>, tag = <span class="cs">"v0.1.1"</span> }
+<span class="cs">helix-bio</span> = { git = <span class="cs">"https://github.com/mighty840/helix"</span>, tag = <span class="cs">"v0.1.1"</span> }
+<span class="cs">helix-sim</span> = { git = <span class="cs">"https://github.com/mighty840/helix"</span>, tag = <span class="cs">"v0.1.1"</span> }</pre></div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Encode &amp; Run</h2><span class="sec-num">§ 2.3</span></div>
       <div class="margin-note green" style="top:50px;right:36px;font-size:11px">R7 holds the<br>return value<br>by convention</div>
       <div class="code-block"><span class="code-fname">src/main.rs</span>
 <pre><span class="ck">use</span> helix_asm::Assembler;
-<span class="ck">use</span> helix_vm::{Cpu, ProgramLoader};
+<span class="ck">use</span> helix_ecc::EccConfig;
+<span class="ck">use</span> helix_vm::{Cpu, Memory, ProgramLoader};
 
-<span class="ck">fn</span> <span class="cs">main</span>() {
+<span class="ck">fn</span> main() -&gt; anyhow::Result&lt;()&gt; {
     <span class="ck">let</span> src = <span class="cs">r#"
         .program "add_example"
         .version 1
@@ -492,33 +496,51 @@ pre{margin:0;white-space:pre;overflow-x:auto}
           HALT
     "#</span>;
 
-    <span class="cc">// assemble → codons (Vec&lt;Codon&gt;)</span>
-    <span class="ck">let</span> output = Assembler::new().assemble(src).unwrap();
-    <span class="cc">// load → run</span>
-    <span class="ck">let</span> prog = ProgramLoader::load(&amp;output.codons).unwrap();
-    <span class="ck">let mut</span> cpu = Cpu::new();
-    cpu.execute(&amp;prog).unwrap();
-    println!(<span class="cs">"R7 = {}"</span>, cpu.registers()[<span class="cn">7</span>]); <span class="cc">// 42</span>
+    <span class="cc">// SYNC markers + Reed-Solomon + three copies (TMR)</span>
+    <span class="ck">let</span> cfg = EccConfig::default();
+    <span class="cc">// assemble: source -&gt; DNA string, with bio-safety codon swaps</span>
+    <span class="ck">let</span> out = Assembler::new(cfg, true).assemble(src)?;
+    println!(<span class="cs">"{} nt"</span>, out.dna.len());
+    <span class="cc">// load: DNA string -&gt; ECC decode -&gt; instructions</span>
+    <span class="ck">let</span> prog = ProgramLoader::new(cfg).from_dna_string(&amp;out.dna)?;
+    <span class="ck">let mut</span> cpu = Cpu::new(Memory::new());
+    cpu.run(&amp;prog.instructions)?;
+    println!(<span class="cs">"R7 = {}"</span>, cpu.regs[<span class="cn">7</span>]); <span class="cc">// 42</span>
+    Ok(())
 }</pre></div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Full Round-Trip (with ECC)</h2><span class="sec-num">§ 2.4</span></div>
-      <div class="code-block"><span class="code-fname">src/roundtrip.rs</span>
-<pre><span class="ck">use</span> helix_asm::Assembler;
-<span class="ck">use</span> helix_ecc::{EccConfig, EccEncoder, EccDecoder};
-<span class="ck">use</span> helix_bio::SequenceOptimizer;
-<span class="ck">use</span> helix_vm::{Cpu, ProgramLoader};
+      <div class="code-block"><span class="code-fname">src/bin/roundtrip.rs</span>
+<pre><span class="ck">use</span> helix_bio::SequenceOptimizer;
+<span class="ck">use</span> helix_ecc::{EccConfig, EccDecoder, EccEncoder};
+<span class="ck">use</span> helix_isa::{encode_instruction, Codon, Instruction, Register::*};
+<span class="ck">use</span> helix_vm::{Cpu, Memory, ProgramLoader};
 
-<span class="ck">let</span> output  = Assembler::new().assemble(SRC).unwrap();
-<span class="ck">let</span> cfg     = EccConfig::default();
-<span class="ck">let</span> dna     = EccEncoder::new(cfg).encode(&amp;output.codons).unwrap();
-<span class="ck">let</span> report  = SequenceOptimizer::new().lint(&amp;dna);
-<span class="cc">// simulate DNA storage (mutations …)</span>
-<span class="ck">let</span> decoded = EccDecoder::new(cfg).decode(&amp;dna).unwrap();
-<span class="ck">let</span> prog    = ProgramLoader::load(&amp;decoded).unwrap();
-<span class="ck">let mut</span> cpu = Cpu::new();
-cpu.execute(&amp;prog).unwrap();</pre></div>
-      <div class="callout tip">Run <code>cargo test --workspace</code> from the repo root to verify all 159 tests pass before integrating.</div>
+<span class="ck">fn</span> main() -&gt; anyhow::Result&lt;()&gt; {
+    <span class="ck">let</span> program = [
+        Instruction::Imml(R1, <span class="cn">21</span>),
+        Instruction::Imml(R2, <span class="cn">21</span>),
+        Instruction::Add(R7, R1, R2),
+        Instruction::Halt,
+    ];
+    <span class="ck">let mut</span> codons: Vec&lt;Codon&gt; = program.iter().flat_map(encode_instruction).collect();
+    <span class="ck">let</span> report = SequenceOptimizer::default().optimize(&amp;mut codons);
+    println!(<span class="cs">"bio violations left: {}"</span>, report.violations.len());
+
+    <span class="ck">let</span> cfg = EccConfig::default();
+    <span class="ck">let mut</span> stored = EccEncoder::new(cfg).encode(&amp;codons);
+    <span class="cc">// simulated damage: change one codon in the first copy</span>
+    stored[<span class="cn">5</span>] = Codon::new(stored[<span class="cn">5</span>].value() ^ 0b11);
+
+    <span class="ck">let</span> recovered = EccDecoder::new(cfg).decode(&amp;stored)?;
+    <span class="ck">let</span> prog = ProgramLoader::from_raw_codons(&amp;recovered)?;
+    <span class="ck">let mut</span> cpu = Cpu::new(Memory::new());
+    cpu.run(&amp;prog.instructions)?;
+    println!(<span class="cs">"R7 = {}"</span>, cpu.regs[<span class="cn">7</span>]); <span class="cc">// 42</span>
+    Ok(())
+}</pre></div>
+      <div class="callout tip">Both programs print <code>R7 = 42</code>. The second changes one codon of the first copy before decoding; the three-copy vote repairs it. Everything here runs in software.</div>
     </section>
   </div>
 </div>
@@ -583,8 +605,8 @@ cpu.execute(&amp;prog).unwrap();</pre></div>
         <tbody>
           <tr><td>Source</td><td><span class="mono">.hx</span> text file</td><td>variable</td></tr>
           <tr><td>Assembled</td><td><span class="mono">Vec&lt;Codon&gt;</span></td><td>4 codons/instr = 24 bits/instr</td></tr>
-          <tr><td>Bio-checked</td><td><span class="mono">DnaSequence</span></td><td>12 nt/instr</td></tr>
-          <tr><td>ECC-encoded</td><td><span class="mono">DnaSequence</span></td><td>+SYNC header +RS parity +TMR ×3</td></tr>
+          <tr><td>Bio-checked</td><td><span class="mono">Vec&lt;Codon&gt;</span></td><td>12 nt/instr (opcode synonym swaps only)</td></tr>
+          <tr><td>ECC-encoded</td><td><span class="mono">DnaSequence</span></td><td>+SYNC +RS parity per 8 instrs, ×3 copies (TMR)</td></tr>
           <tr><td>Decoded</td><td><span class="mono">Vec&lt;Codon&gt;</span></td><td>same as assembled</td></tr>
           <tr><td>Executed</td><td>register state</td><td>8 × u16 = 128 bits</td></tr>
         </tbody>
@@ -622,9 +644,9 @@ cpu.execute(&amp;prog).unwrap();</pre></div>
 │  opcode [5:0]│  field2 [5:0]│  field3 [5:0]│  field4 [5:0]│
 └──────────────┴──────────────┴──────────────┴──────────────┘
 
-R-type:  [op:5|0][rd:3|pad:3][rs1:3|pad:3][rs2:3|pad:3]
-I-type:  [op:5|0][rd:3|pad:3][imm_hi:6   ][imm_lo:6   ]
-Branch:  [op:5|0][pad:6     ][offset_hi:6][offset_lo:6]</pre></div>
+R-type:  [op:6][rd:3|pad:3][rs1:3|pad:3      ][rs2:3|pad:3      ]
+I-type:  [op:6][rd:3|pad:3][pad:2|imm[7:4]   ][imm[3:0]|pad:2   ]
+Branch:  [op:6][0:6       ][pad:2|off[7:4]   ][off[3:0]|pad:2   ]</pre></div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Codon Encoding</h2><span class="sec-num">§ 4.3</span></div>
@@ -785,19 +807,20 @@ main:
 [ instr₁ (4 codons) ]  ← codon₀ = opcode symbol 1
   …
 [ instr₇ (4 codons) ]  ← codon₀ = opcode symbol 7
-[ ECCP parity₀ parity₁ padding ]  ← 2 RS parity symbols</pre></div>
-      <div class="callout">The SYNC marker (4 known codons) allows the decoder to <em>resync</em> after frame loss — the most common error in long-term DNA storage.</div>
+[ ECCP, 0, parity₀, parity₁ ]  ← 2 RS parity symbols
+= 10 instructions = 40 codons = 120 nt per block</pre></div>
+      <div class="callout">The SYNC marker (4 known codons) marks where each block starts. The decoder searches for it at codon-aligned positions only, so a single inserted or deleted nucleotide is not re-framed in v0.1.x.</div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">API</h2><span class="sec-num">§ 7.3</span></div>
       <div class="code-block"><span class="code-fname">ecc usage</span>
-<pre><span class="ck">use</span> helix_ecc::{EccConfig, EccEncoder, EccDecoder};
+<pre><span class="ck">use</span> helix_ecc::{EccConfig, EccDecoder, EccEncoder};
 
-<span class="ck">let</span> cfg = EccConfig::default();
-<span class="cc">// encode Vec&lt;Codon&gt; → DnaSequence with parity</span>
-<span class="ck">let</span> dna = EccEncoder::new(cfg).encode(&amp;codons)?;
-<span class="cc">// decode + correct DnaSequence → Vec&lt;Codon&gt;</span>
-<span class="ck">let</span> recovered = EccDecoder::new(cfg).decode(&amp;dna)?;</pre></div>
+<span class="ck">let</span> cfg = EccConfig::default(); <span class="cc">// tmr: true, block_size: 8</span>
+<span class="cc">// instruction codons -&gt; SYNC + data + ECCP per block, x3 copies</span>
+<span class="ck">let</span> stored: Vec&lt;Codon&gt; = EccEncoder::new(cfg).encode(&amp;codons);
+<span class="cc">// vote, find SYNC, correct one opcode codon per block</span>
+<span class="ck">let</span> recovered: Vec&lt;Codon&gt; = EccDecoder::new(cfg).decode(&amp;stored)?;</pre></div>
     </section>
   </div>
 </div>
@@ -812,8 +835,9 @@ main:
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">How TMR Works</h2><span class="sec-num">§ 8.1</span></div>
       <div class="body-text">
-        <p>TMR stores <strong>three copies</strong> of the encoded DNA sequence and takes a majority vote at decode time. If two copies agree, the third is considered corrupt and the majority value wins.</p>
-        <p>TMR is the outer layer of ECC — it handles burst errors that span an entire RS block, which RS alone cannot correct.</p>
+        <p>TMR stores <strong>three copies</strong> of the encoded sequence back to back and takes a majority vote per codon at decode time. If two copies agree, the third is considered corrupt and the majority value wins.</p>
+        <p>The decoder splits the stream into thirds by length, so no separator is needed. (v0.1.0 placed a <code>TGA</code> codon between copies, but that value can also occur inside instructions; v0.1.1 still reads the v0.1.0 layout.) A stream whose length cannot be split this way, for example after an inserted or deleted codon, is rejected.</p>
+        <p>TMR is the outer layer of ECC. It repairs damage confined to one of the three copies, including a burst that wipes out a whole RS block, and it is the only layer that protects operand codons.</p>
       </div>
       <div class="callout">TMR triples the length of the stored sequence.</div>
     </section>
@@ -828,17 +852,13 @@ main:
     <span class="ck">if</span> a == b { a }
     <span class="ck">else if</span> a == c { a }
     <span class="ck">else if</span> b == c { b }
-    <span class="ck">else</span> { <span class="cc">/* unresolvable — flag EccError */</span> };</pre></div>
+    <span class="ck">else</span> { a }  <span class="cc">// no majority: copy A wins</span>;</pre></div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">When to use TMR</h2><span class="sec-num">§ 8.3</span></div>
       <div class="body-text">
-        <p>TMR is optional and configured via <code>EccConfig</code>. Enable it for:</p>
-        <ul>
-          <li>Expected long storage durations (&gt; 100 years)</li>
-          <li>Environments with high radiation or oxidative stress</li>
-          <li>Critical algorithms where retrieval failure is unacceptable</li>
-        </ul>
+        <p>TMR is on by default (<code>EccConfig::default()</code>). Turn it off with <code>tmr: false</code> or <code>--no-tmr</code> for one copy: a third of the length, with only Reed-Solomon protecting opcode codons and nothing protecting operands.</p>
+        <p>Measured with <code>helix-sim</code> on <code>gcd.hx</code>, 200 runs, simulated substitutions only at 1%: 98.3% of instructions recovered with TMR, 73.9% without.</p>
       </div>
     </section>
   </div>
@@ -862,10 +882,10 @@ main:
       <table class="sketch-table">
         <thead><tr><th>Rule</th><th>Limit</th><th>Reason</th></tr></thead>
         <tbody>
-          <tr><td>GC content</td><td>40 – 60 %</td><td>Outside range: synthesis failure, poor sequencing</td></tr>
-          <tr><td>Homopolymer run</td><td>≤ 4 identical bases</td><td>Long runs cause polymerase slippage</td></tr>
-          <tr><td>Hairpin ΔG</td><td>≥ −2 kcal/mol</td><td>Secondary structure prevents sequencing</td></tr>
-          <tr><td>Tandem repeat</td><td>no unit &gt; 8 nt repeated &gt; 3×</td><td>PCR amplification artefacts</td></tr>
+          <tr><td>GC content</td><td>40 – 60 % per 100 nt window (step 10)</td><td>Synthesis yield, thermal stability</td></tr>
+          <tr><td>Homopolymer run</td><td>≤ 4 identical bases</td><td>Synthesis and sequencing accuracy</td></tr>
+          <tr><td>Dinucleotide repeat</td><td>≤ 4 repeats (e.g. ATATATAT)</td><td>Polymerase slippage</td></tr>
+          <tr><td>Palindrome</td><td>≤ 8 bp</td><td>Proxy for hairpins</td></tr>
         </tbody>
       </table>
       <div class="callout warn">The optimizer does not always clear every violation: on the four example programs, 8 to 60 remain. It also runs before ECC is added, so SYNC, parity and TMR copies are not checked.</div>
@@ -875,11 +895,9 @@ main:
       <div class="code-block"><span class="code-fname">bio lint</span>
 <pre><span class="ck">use</span> helix_bio::SequenceOptimizer;
 
-<span class="ck">let</span> report = SequenceOptimizer::new().lint(&amp;dna_seq);
-<span class="ck">if</span> !report.violations.is_empty() {
-    <span class="ck">for</span> v <span class="ck">in</span> &amp;report.violations {
-        eprintln!(<span class="cs">"{v}"</span>);
-    }
+<span class="ck">let</span> report = SequenceOptimizer::default().lint(&amp;codons);
+<span class="ck">for</span> v <span class="ck">in</span> &amp;report.violations {
+    eprintln!(<span class="cs">"{v:?}"</span>);
 }</pre></div>
     </section>
   </div>
@@ -902,9 +920,9 @@ main:
       <div class="sec-head"><h2 class="sec-title">Optimization Strategy</h2><span class="sec-num">§ 10.2</span></div>
       <div class="body-text">
         <ul>
-          <li><strong>GC balancing</strong> — slide a window of 20 codons; if GC &lt; 40% swap a low-GC codon for a synonymous high-GC one</li>
-          <li><strong>Homopolymer breaking</strong> — detect runs ≥ 4; substitute the 4th codon with a GC-neutral synonym</li>
-          <li><strong>Hairpin avoidance</strong> — compute approximate ΔG; if below threshold, reverse-complement the offending region using synonyms where possible</li>
+          <li><strong>Passes</strong> — up to 5 (<code>SequenceOptimizer::default()</code>); each pass lints the whole sequence</li>
+          <li><strong>One swap per pass</strong> — for the first violation it can act on, it swaps the opcode codon of the instruction at that position, or of one of the two instructions before it, to its synonym</li>
+          <li><strong>Scope</strong> — only opcodes 0x00 to 0x0F have a synonym (opcode + 32); operand codons never change, and SYNC, parity and TMR copies are added after this step</li>
         </ul>
       </div>
       <div class="callout">The optimizer rewrites opcode codons to their synonyms (opcodes 0x00 to 0x0F have one each) and reports the violations that remain.</div>
@@ -916,8 +934,8 @@ main:
         <tbody>
           <tr><td><span class="mono">helix_bio::gc</span></td><td>GC content per window</td></tr>
           <tr><td><span class="mono">helix_bio::homopolymer</span></td><td>Long identical-base runs</td></tr>
-          <tr><td><span class="mono">helix_bio::structure</span></td><td>Hairpin / secondary structure ΔG</td></tr>
-          <tr><td><span class="mono">helix_bio::repeats</span></td><td>Tandem repeat detection</td></tr>
+          <tr><td><span class="mono">helix_bio::structure</span></td><td>Palindromes longer than 8 bp</td></tr>
+          <tr><td><span class="mono">helix_bio::repeats</span></td><td>Dinucleotide repeats (more than 4)</td></tr>
         </tbody>
       </table>
     </section>
@@ -934,11 +952,11 @@ main:
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Pipeline</h2><span class="sec-num">§ 11.1</span></div>
       <div class="body-text">
-        <p>The assembler transforms <code>.hx</code> source text into a <code>Vec&lt;Codon&gt;</code> through three stages:</p>
+        <p>The assembler transforms <code>.hx</code> source text into a DNA string:</p>
         <ul>
           <li><strong>Parse</strong> (<code>helix_asm::parser</code>) — tokenise and produce a <code>SourceProgram</code> with unresolved label refs</li>
           <li><strong>Resolve</strong> (<code>helix_asm::resolver</code>) — compute branch offsets, produce <code>ResolvedProgram</code></li>
-          <li><strong>Emit</strong> (<code>helix_asm::emitter</code>) — encode each <code>Instruction</code> to 4 <code>Codon</code>s, return <code>AssemblyOutput</code></li>
+          <li><strong>Emit</strong> (<code>helix_asm::emitter</code>) — prepend a loader prologue when the program has a <code>.data</code> section or a non-zero <code>.entry</code> (it stores each data word at addresses 0, 1, 2, … through R6/R7, resets them, and jumps to the entry), encode each <code>Instruction</code> to 4 <code>Codon</code>s, apply bio swaps, then ECC, and return <code>AssemblyOutput</code></li>
         </ul>
       </div>
     </section>
@@ -946,24 +964,27 @@ main:
       <div class="sec-head"><h2 class="sec-title">API</h2><span class="sec-num">§ 11.2</span></div>
       <div class="code-block"><span class="code-fname">assembler API</span>
 <pre><span class="ck">use</span> helix_asm::{Assembler, AssemblyOutput};
+<span class="ck">use</span> helix_ecc::EccConfig;
 
-<span class="ck">let</span> output: AssemblyOutput = Assembler::new()
+<span class="ck">let</span> out: AssemblyOutput = Assembler::new(EccConfig::default(), true)
     .assemble(source_str)?;
 
-<span class="cc">// output.codons  : Vec&lt;Codon&gt;  — ready for ECC / VM</span>
-<span class="cc">// output.labels  : HashMap&lt;String, usize&gt;  — label map</span>
-<span class="cc">// output.program : ResolvedProgram  — instruction list</span></pre></div>
+<span class="cc">// out.dna          : String           the A/C/G/T sequence</span>
+<span class="cc">// out.raw_codons   : Vec&lt;Codon&gt;       program instructions, before ECC</span>
+<span class="cc">// out.prologue_len : usize            loader instructions in front (.data, .entry)</span>
+<span class="cc">// out.program      : ResolvedProgram  instructions, data, entry</span>
+<span class="cc">// out.bio_swaps, out.bio_violations : usize</span></pre></div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Error Handling</h2><span class="sec-num">§ 11.3</span></div>
-      <div class="body-text"><p>All errors implement <code>std::error::Error</code> and carry source-position information:</p></div>
+      <div class="body-text"><p>All errors implement <code>std::error::Error</code>; <code>AssembleError</code> wraps the parse and resolve errors:</p></div>
       <table class="sketch-table">
         <thead><tr><th>Error type</th><th>Cause</th></tr></thead>
         <tbody>
-          <tr><td><span class="mono">ParseError</span></td><td>Invalid token, malformed directive</td></tr>
-          <tr><td><span class="mono">AssembleError::UndefinedLabel</span></td><td>Branch target not found</td></tr>
-          <tr><td><span class="mono">AssembleError::OffsetOverflow</span></td><td>Branch distance &gt; ±127 instructions</td></tr>
-          <tr><td><span class="mono">AssembleError::ImmOverflow</span></td><td>Immediate value &gt; 255</td></tr>
+                    <tr><td><span class="mono">ParseError::Syntax</span></td><td>Invalid token, malformed directive, immediate &gt; 255 (with line number)</td></tr>
+          <tr><td><span class="mono">ResolveError::UndefinedLabel</span></td><td>Branch target not found</td></tr>
+          <tr><td><span class="mono">ResolveError::OffsetOutOfRange</span></td><td>Branch distance outside i8 range</td></tr>
+          <tr><td><span class="mono">AssembleError::EntryOutOfRange</span></td><td>Entry point beyond the prologue's JMP range</td></tr>
         </tbody>
       </table>
     </section>
@@ -980,22 +1001,22 @@ main:
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Execution Model</h2><span class="sec-num">§ 12.1</span></div>
       <div class="body-text">
-        <p>The VM is a simple <strong>register machine</strong>: 8 × 16-bit registers, a program counter, a flags register (zero, negative), and a small scratch <strong>RAM</strong> (256 × 16-bit words).</p>
-        <p>Execution is <em>deterministic and synchronous</em> — no threads, no I/O, no side effects. This makes results reproducible regardless of when or where the DNA is retrieved.</p>
+        <p>The VM is a simple <strong>register machine</strong>: 8 × 16-bit registers, a program counter, a flags register (zero, negative, carry), and a <strong>RAM</strong> of 1024 × 16-bit words.</p>
+        <p>Execution is <em>deterministic and synchronous</em> — no threads, no I/O, no side effects. The same instructions always produce the same result. The CLI prints a per-instruction trace with <code>helix-vm --trace</code>.</p>
       </div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">API</h2><span class="sec-num">§ 12.2</span></div>
       <div class="code-block"><span class="code-fname">vm usage</span>
-<pre><span class="ck">use</span> helix_vm::{Cpu, ProgramLoader};
+<pre><span class="ck">use</span> helix_ecc::EccConfig;
+<span class="ck">use</span> helix_vm::{Cpu, Memory, ProgramLoader};
 
-<span class="ck">let</span> prog = ProgramLoader::load(&amp;codons)?;
-<span class="ck">let mut</span> cpu = Cpu::new();
-cpu.execute(&amp;prog)?;
+<span class="ck">let</span> prog = ProgramLoader::new(EccConfig::default()).from_dna_string(&amp;dna)?;
+<span class="ck">let mut</span> cpu = Cpu::new(Memory::new());
+<span class="ck">let</span> executed = cpu.run(&amp;prog.instructions)?; <span class="cc">// runs until HALT</span>
 
-<span class="ck">let</span> regs = cpu.registers();
-println!(<span class="cs">"R7 = {}"</span>, regs[<span class="cn">7</span>]);
-println!(<span class="cs">"R1 = {}"</span>, regs[<span class="cn">1</span>]);</pre></div>
+println!(<span class="cs">"{executed} instructions"</span>);
+println!(<span class="cs">"R1 = {}, R7 = {}"</span>, cpu.regs[<span class="cn">1</span>], cpu.regs[<span class="cn">7</span>]);</pre></div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Memory Layout</h2><span class="sec-num">§ 12.3</span></div>
@@ -1003,12 +1024,12 @@ println!(<span class="cs">"R1 = {}"</span>, regs[<span class="cn">1</span>]);</p
         <thead><tr><th>Region</th><th>Size</th><th>Notes</th></tr></thead>
         <tbody>
           <tr><td>Registers</td><td>8 × u16</td><td>R0 = 0 always</td></tr>
-          <tr><td>Scratch RAM</td><td>256 × u16</td><td>LOAD/STORE target; zeroed on init</td></tr>
-          <tr><td>Call stack</td><td>64 depth</td><td>CALL/RET only; overflow = CpuError</td></tr>
-          <tr><td>Flags</td><td>zero, negative</td><td>Set by CMP; read by branches</td></tr>
+          <tr><td>RAM</td><td>1024 × u16</td><td>LOAD/STORE target; zeroed on init; <code>.data</code> starts at 0</td></tr>
+          <tr><td>Stack</td><td>up to 256 words</td><td>Top of RAM, grows down; PUSH/POP and CALL/RET; overflow = trap</td></tr>
+          <tr><td>Flags</td><td>zero, negative, carry</td><td>Set by CMP only; read by branches</td></tr>
         </tbody>
       </table>
-      <div class="callout warn">HALT is required — programs that don't HALT will run until the instruction step limit (default 65,536) and return <code>CpuError::StepLimitExceeded</code>.</div>
+      <div class="callout warn">End programs with HALT. Running past the last instruction also stops the VM; a program that loops forever stops at 1,000,000 instructions with <code>CpuError::InstructionLimit</code>.</div>
     </section>
   </div>
 </div>
@@ -1031,27 +1052,24 @@ println!(<span class="cs">"R1 = {}"</span>, regs[<span class="cn">1</span>]);</p
       <table class="sketch-table">
         <thead><tr><th>Mode</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td><span class="mono">Substitution</span></td><td>Randomly flip a base to another (e.g. A→C). Most common in long-term storage.</td></tr>
-          <tr><td><span class="mono">Deletion</span></td><td>Remove a random base; causes frame shift. Tests SYNC re-framing.</td></tr>
-          <tr><td><span class="mono">Insertion</span></td><td>Insert a random base. Also frame-shifts.</td></tr>
-          <tr><td><span class="mono">BurstError</span></td><td>Corrupt a contiguous run of N bases. Tests TMR coverage.</td></tr>
+          <tr><td><span class="mono">Composite</span></td><td>Independent substitution, deletion and insertion rates per nucleotide (<code>--sub-rate</code>, <code>--del-rate</code>, <code>--ins-rate</code>). Deletions and insertions shift the frame, which v0.1.x does not recover from.</td></tr>
+          <tr><td><span class="mono">Burst</span></td><td>Errors concentrated in one random region (<code>--burst</code>, <code>--burst-frac</code>), simulating localized damage.</td></tr>
         </tbody>
       </table>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">API</h2><span class="sec-num">§ 13.3</span></div>
       <div class="code-block"><span class="code-fname">simulator usage</span>
-<pre><span class="ck">use</span> helix_sim::{ErrorInjector, InjectionConfig, InjectionMode};
+<pre><span class="ck">use</span> helix_ecc::EccConfig;
+<span class="ck">use</span> helix_sim::metrics::simulate;
+<span class="ck">use</span> helix_sim::InjectionConfig;
 
-<span class="ck">let</span> cfg = InjectionConfig {
-    mode: InjectionMode::Substitution,
-    rate: <span class="cn">0.01</span>,  <span class="cc">// 1% base error rate</span>
-    seed: <span class="cn">42</span>,
-};
-<span class="ck">let</span> mutated = ErrorInjector::new(cfg).inject(&amp;dna);
-<span class="cc">// now decode + execute and compare results</span>
-<span class="ck">let</span> report: SimReport = run_full_pipeline(&amp;mutated);</pre></div>
-      <div class="callout tip">Run the simulator over 10,000 trials with <code>rate: 0.001</code> (0.1%) to get a statistical baseline for your algorithm's error tolerance under realistic DNA storage conditions.</div>
+<span class="cc">// 1% substitutions, no deletions or insertions, seed 42</span>
+<span class="ck">let</span> inject = InjectionConfig::composite(<span class="cn">0.01</span>, <span class="cn">0.0</span>, <span class="cn">0.0</span>, <span class="cn">42</span>);
+<span class="ck">let</span> report = simulate(&amp;dna, &amp;original_instrs, inject, EccConfig::default());
+<span class="cc">// compares decoded instructions with the originals (does not execute)</span>
+println!(<span class="cs">"{:.1}% recovered"</span>, report.recovery_rate() * <span class="cn">100.0</span>);</pre></div>
+      <div class="callout tip">The rates are simulation parameters, not measured DNA error rates. Use <code>--runs N</code> to average over seeds (run <em>n</em> uses seed + <em>n</em>), e.g. <code>helix-sim gcd.dna --sub-rate 0.01 --del-rate 0 --ins-rate 0 --runs 200</code>.</div>
     </section>
   </div>
 </div>
@@ -1065,7 +1083,7 @@ println!(<span class="cs">"R1 = {}"</span>, regs[<span class="cn">1</span>]);</p
   <div class="doc">
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Fibonacci</h2><span class="sec-num">§ 14.1</span></div>
-      <div class="margin-note green" style="top:50px;right:36px;font-size:11px">~252 nt<br>(21 instrs)<br>+ ECC</div>
+      <div class="margin-note green" style="top:50px;right:36px;font-size:11px">12 instrs<br>= 144 nt raw<br>720 nt with ECC</div>
       <div class="code-block"><span class="code-fname">fibonacci.hx</span>
 <pre><span class="ck">.program</span> <span class="cs">"fibonacci"</span>
 <span class="ck">.version</span> <span class="cn">1</span>
@@ -1092,52 +1110,69 @@ done:
 <span class="cc">; → R1 = 55  (F(10))</span></pre></div>
     </section>
     <section class="doc-section">
-      <div class="sec-head"><h2 class="sec-title">Integer Square Root</h2><span class="sec-num">§ 14.2</span></div>
-      <div class="code-block"><span class="code-fname">isqrt.hx</span>
-<pre><span class="ck">.program</span> <span class="cs">"isqrt"</span>
-<span class="ck">.version</span> <span class="cn">1</span>
-<span class="ck">.text</span>
-<span class="ck">.entry</span> main
+      <div class="sec-head"><h2 class="sec-title">Array Sum (data section)</h2><span class="sec-num">§ 14.2</span></div>
+      <div class="code-block"><span class="code-fname">sum_array.hx</span>
+<pre><span class="cc">; Array summation — sum all elements of arr[0..N-1].</span>
+<span class="cc">; Result: R3 = sum = 10+20+30+40+50 = 150</span>
+
+<span class=<span class="cs">"ck"</span>>.program</span> <span class="cs">"sum_array"</span>
+<span class=<span class="cs">"ck"</span>>.version</span> <span class="cn">1</span>
+<span class=<span class="cs">"ck"</span>>.memory</span> <span class="cn">64</span>
+<span class=<span class="cs">"ck"</span>>.data</span>
+arr: .words <span class="cn">10</span>, <span class="cn">20</span>, <span class="cn">30</span>, <span class="cn">40</span>, <span class="cn">50</span>
+
+<span class=<span class="cs">"ck"</span>>.text</span>
+<span class=<span class="cs">"ck"</span>>.entry</span> main
 
 main:
-  IMML R1, <span class="cn">144</span>   <span class="cc">; n = 144</span>
-  IMML R2, <span class="cn">0</span>     <span class="cc">; root = 0</span>
+    IMML R1, <span class="cn">0</span>          <span class="cc">; base address of arr (data loads at addr 0)</span>
+    IMML R2, <span class="cn">5</span>          <span class="cc">; N = 5 (array length)</span>
+    IMML R3, <span class="cn">0</span>          <span class="cc">; sum = 0</span>
+    IMML R4, <span class="cn">0</span>          <span class="cc">; i = 0</span>
 
 loop:
-  INC  R3, R2
-  MUL  R4, R3, R3
-  CMP  R4, R1
-  BGE  done
-  ADD  R2, R3, R0
-  JMP  loop
+    CMP  R4, R2
+    BGE  done           <span class="cc">; exit when i &gt;= N</span>
+
+    ADD  R5, R1, R4     <span class="cc">; addr = base + i</span>
+    LOAD R5, R5         <span class="cc">; R5 = arr[i]</span>
+    ADD  R3, R3, R5     <span class="cc">; sum += arr[i]</span>
+    INC  R4, R4         <span class="cc">; i++</span>
+    JMP  loop
 
 done:
-  HALT
-<span class="cc">; → R2 = 12  (√144 = 12)</span></pre></div>
+    <span class="cc">; R3 = 150</span>
+    HALT</pre></div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">GCD (Euclidean)</h2><span class="sec-num">§ 14.3</span></div>
       <div class="code-block"><span class="code-fname">gcd.hx</span>
-<pre><span class="ck">.program</span> <span class="cs">"gcd"</span>
-<span class="ck">.version</span> <span class="cn">1</span>
-<span class="ck">.text</span>
-<span class="ck">.entry</span> main
+<pre><span class="cc">; Euclidean GCD — compute GCD(a, b).</span>
+<span class="cc">; Result: R1 = GCD(48, 18) = 6</span>
+<span class="cc">;</span>
+<span class="cc">; Algorithm: while b != 0: (a, b) = (b, a mod b)</span>
+
+<span class=<span class="cs">"ck"</span>>.program</span> <span class="cs">"gcd"</span>
+<span class=<span class="cs">"ck"</span>>.version</span> <span class="cn">1</span>
+<span class=<span class="cs">"ck"</span>>.text</span>
+<span class=<span class="cs">"ck"</span>>.entry</span> main
 
 main:
-  IMML R1, <span class="cn">48</span>    <span class="cc">; a</span>
-  IMML R2, <span class="cn">36</span>    <span class="cc">; b</span>
+    IMML R1, <span class="cn">48</span>         <span class="cc">; a = 48</span>
+    IMML R2, <span class="cn">18</span>         <span class="cc">; b = 18</span>
 
 loop:
-  CMP  R2, R0    <span class="cc">; b == 0?</span>
-  BEQ  done
-  MOD  R3, R1, R2
-  ADD  R1, R2, R0
-  ADD  R2, R3, R0
-  JMP  loop
+    CMP  R2, R0         <span class="cc">; b == 0?</span>
+    BEQ  done           <span class="cc">; yes → done, R1 holds GCD</span>
+
+    MOD  R3, R1, R2     <span class="cc">; R3 = a mod b</span>
+    ADD  R1, R2, R0     <span class="cc">; a = b</span>
+    ADD  R2, R3, R0     <span class="cc">; b = a mod b</span>
+    JMP  loop
 
 done:
-  HALT
-<span class="cc">; → R1 = 12  (gcd(48,36))</span></pre></div>
+    <span class="cc">; R1 = GCD(48, 18) = 6</span>
+    HALT</pre></div>
     </section>
   </div>
 </div>
@@ -1145,54 +1180,30 @@ done:
 <!-- ───────── EXAMPLES: MODEL WEIGHTS ───────── -->
 <div id="page-examples-weights" class="doc-page">
   <div class="doc-header">
-    <div class="doc-header-title">Model Weights</div>
-    <div class="doc-header-crumb">Examples · §15 — archiving neural network weights in DNA</div>
+    <div class="doc-header-title">Quantized Values</div>
+    <div class="doc-header-crumb">Examples · §15 — one codon per 6-bit number</div>
   </div>
   <div class="doc">
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Concept</h2><span class="sec-num">§ 15.1</span></div>
       <div class="body-text">
-        <p>Neural network weights are just arrays of floating-point numbers. Helix can archive them by encoding a <em>weight-loader program</em> that reconstructs the weight tensor using IMML/IMMH pairs followed by STORE instructions. At retrieval time, the VM re-materialises the weights into scratch RAM.</p>
-        <p>For a tiny network (e.g. 128 weights × 16-bit fixed-point), the encoding fits in a single ECC block. For larger networks, multiple blocks are chained.</p>
+        <p>A codon holds 6 bits, a number from 0 to 63. A list of numbers quantized to 64 levels can therefore be stored at one codon, three nucleotides, per number, with a rounding error of at most half a step.</p>
+        <p>The demo <code>helix-vm/examples/weights.rs</code> does this for 20 example values in [-0.890, 0.930]. It stores raw codons only: no SYNC, Reed-Solomon or TMR.</p>
       </div>
-      <div class="callout">This is a <strong>proof-of-concept</strong> for archival, not inference. Execution on the Helix VM is O(n) in weight count — practical only for small models.</div>
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">Quantisation</h2><span class="sec-num">§ 15.2</span></div>
       <div class="body-text">
-        <p>Floating-point weights are quantised to <strong>16-bit unsigned fixed-point</strong> (Q8.8 format) before encoding. Each weight <em>w</em> maps to: <code>u16 = clamp(w × 256 + 32768, 0, 65535)</code>.</p>
+        <p>With <em>step</em> = (max − min) / 63, each value <em>w</em> maps to <code>q = round((w − min) / step)</code>, stored as the codon with value <em>q</em>, and is read back as <code>min + q × step</code>. For the demo's values the step is 0.02889, so the largest possible error is 0.01444.</p>
       </div>
-      <table class="sketch-table">
-        <thead><tr><th>Network size</th><th>Weights</th><th>DNA length (no ECC)</th><th>With TMR</th></tr></thead>
-        <tbody>
-          <tr><td>Tiny MLP</td><td>128</td><td>≈ 3,072 nt</td><td>≈ 9,216 nt</td></tr>
-          <tr><td>Small MLP</td><td>1,024</td><td>≈ 24,576 nt</td><td>≈ 73,728 nt</td></tr>
-          <tr><td>Medium MLP</td><td>8,192</td><td>≈ 196,608 nt</td><td>≈ 589,824 nt</td></tr>
-        </tbody>
-      </table>
     </section>
     <section class="doc-section">
-      <div class="sec-head"><h2 class="sec-title">Loader Sketch</h2><span class="sec-num">§ 15.3</span></div>
-      <div class="code-block"><span class="code-fname">weight_loader.hx (excerpt)</span>
-<pre><span class="ck">.program</span> <span class="cs">"weights_tiny_mlp"</span>
-<span class="ck">.version</span> <span class="cn">1</span>
-<span class="ck">.text</span>
-<span class="ck">.entry</span> load
-
-<span class="cc">; weight[0] = 0x013F (≈ 0.246 in Q8.8)</span>
-load:
-  IMML R1, <span class="cn">63</span>   <span class="cc">; 0x3F</span>
-  IMMH R1, <span class="cn">1</span>    <span class="cc">; 0x01  → R1 = 0x013F</span>
-  IMML R2, <span class="cn">0</span>    <span class="cc">; addr 0</span>
-  STORE R2, R1  <span class="cc">; mem[0] = weight[0]</span>
-
-<span class="cc">; weight[1] = 0x00C8 (≈ 0.781 in Q8.8)</span>
-  IMML R1, <span class="cn">200</span>  <span class="cc">; 0xC8</span>
-  IMMH R1, <span class="cn">0</span>
-  IMML R2, <span class="cn">1</span>    <span class="cc">; addr 1</span>
-  STORE R2, R1
-  <span class="cc">; … repeat for all 128 weights …</span>
-  HALT</pre></div>
+      <div class="sec-head"><h2 class="sec-title">Run</h2><span class="sec-num">§ 15.3</span></div>
+      <div class="code-block"><span class="code-fname">cargo run --example weights --manifest-path helix-vm/Cargo.toml (excerpt)</span>
+<pre>20 weights × 3 nt/codon = 60 nucleotides  (3.0 nt/weight)
+MSE:      0.0000629
+Max err:  0.01333  (theoretical max: 0.01444)</pre></div>
+      <div class="callout">The 60 nucleotides hold 120 bits, the same as 15 bytes: 2 bits per nucleotide.</div>
     </section>
   </div>
 </div>
@@ -1201,7 +1212,7 @@ load:
 <footer class="page-footer">
   <span>Helix — Technical Documentation</span>
   <span id="footer-page-name">Introduction</span>
-  <span>v 0.1.0 · April 2026</span>
+  <span>v 0.1.1 · November 2026</span>
 </footer>
 
 </main>
@@ -1213,7 +1224,7 @@ const PAGE_NAMES = {
   'isa-overview':'ISA Overview','isa-instructions':'Instruction Set','isa-assembly':'Assembly Language',
   'ecc':'Reed-Solomon ECC','tmr':'TMR','bio':'Bio Constraints','bio-optimizer':'Bio Optimizer',
   'assembler':'Assembler','vm':'Virtual Machine','simulator':'Simulator',
-  'examples-algorithms':'Algorithm Examples','examples-weights':'Model Weights'
+  'examples-algorithms':'Algorithm Examples','examples-weights':'Quantized Values'
 };
 
 function navigate(page) {

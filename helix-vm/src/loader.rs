@@ -25,6 +25,8 @@ pub enum LoadError {
     Decode(#[from] helix_isa::DecodeError),
     #[error("codon count is not a multiple of 4")]
     UnalignedCodons,
+    #[error("DNA decoded to 0 instructions")]
+    NoInstructions,
 }
 
 pub struct ProgramLoader {
@@ -70,6 +72,9 @@ impl ProgramLoader {
 
         let decoder = EccDecoder::new(self.config);
         let instr_codons = decoder.decode(&codons)?;
+        if instr_codons.is_empty() {
+            return Err(LoadError::NoInstructions);
+        }
 
         Self::from_raw_codons(&instr_codons)
     }

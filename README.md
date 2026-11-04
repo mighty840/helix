@@ -53,7 +53,7 @@ result
 1. **Codon degeneracy** — opcodes 0x00–0x0F have synonymous codons
 2. **SYNC markers** — 4-codon pattern inserted every 8 instructions for frame sync
 3. **Reed-Solomon** — RS(10,8) over GF(2⁶) on the opcode codon of each instruction; corrects 1 wrong opcode codon per block of 8 instructions (operand codons are protected only by TMR)
-4. **TMR** — Triple Modular Redundancy with majority vote
+4. **TMR** — Triple Modular Redundancy: three copies back to back, split by length, majority vote per codon
 
 ### Bio-Safety Constraints
 
@@ -79,6 +79,10 @@ cargo run --bin helix-asm -- examples/fibonacci.hx
 cargo run --bin helix-vm -- \
   "$(cargo run --bin helix-asm -- examples/fibonacci.hx 2>/dev/null)"
 
+# Trace every instruction as it executes
+cargo run --bin helix-vm -- --trace \
+  "$(cargo run --bin helix-asm -- examples/gcd.hx 2>/dev/null)"
+
 # Simulate DNA storage errors
 cargo run --bin helix-sim -- \
   "$(cargo run --bin helix-asm -- examples/gcd.hx 2>/dev/null)" \
@@ -99,11 +103,10 @@ Programs in `examples/` use the Helix assembly language (`.hx`):
 | `sum_array.hx` | Array summation | R3 = 150 |
 | `bubble_sort.hx` | Bubble sort | arr[0..7] sorted in-place |
 
-These results are checked by the in-memory tests (`helix-vm/tests`, `helix-asm/tests`), which load the
-data section directly. Through the DNA string, `fibonacci` and `gcd` give the results above; `sum_array`
-and `bubble_sort` do not yet, because the `.data` section is not encoded into the DNA in v0.1.0, and
-`bubble_sort` with TMR also hits a separator bug (the `TGA` separator codon can occur inside the body).
-Both are scheduled for the next release.
+All four give these results both in the in-memory tests and through the DNA string
+(`helix-asm/tests/assemble_run.rs`). Since v0.1.1 the `.data` section travels in the DNA as a short
+loader prologue that stores each word before the program starts (see SPEC.md section 8.2). In v0.1.0
+it did not, so `sum_array` and `bubble_sort` only worked in-memory there.
 
 ### Assembly Language (`.hx`)
 

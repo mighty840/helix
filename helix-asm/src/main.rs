@@ -38,6 +38,13 @@ fn main() -> Result<()> {
 
     eprintln!("[ASM] program: {}", out.program.name);
     eprintln!("[ASM] instructions: {}", out.program.instructions.len());
+    if out.prologue_len > 0 {
+        eprintln!(
+            "[ASM] data words: {}, loader prologue: {} instructions",
+            out.program.data.len(),
+            out.prologue_len
+        );
+    }
     eprintln!("[ASM] DNA length: {} nt", out.dna.len());
     eprintln!(
         "[ASM] bio swaps: {}, violations remaining: {}",

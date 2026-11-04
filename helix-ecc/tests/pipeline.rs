@@ -71,10 +71,10 @@ fn tmr_one_corrupt_copy_recovered() {
     let orig = sample_codons();
     let mut encoded = EccEncoder::new(cfg).encode(&orig);
 
-    // Locate the first SECTION_SEP (0x38 = TGA).
-    let sep_pos = encoded.iter().position(|c| c.value() == 0x38).unwrap();
+    // The three copies are stored back to back; the first is the first third.
+    let copy_len = encoded.len() / 3;
     // Corrupt a few codons in the first copy.
-    for codon in &mut encoded[4..8.min(sep_pos)] {
+    for codon in &mut encoded[4..8.min(copy_len)] {
         let v = codon.value();
         *codon = Codon::new((v ^ 0x0F) & 0x3F);
     }
@@ -108,4 +108,31 @@ fn encoded_stream_is_valid_acgt() {
     let encoded = EccEncoder::new(cfg).encode(&orig);
     let dna: String = encoded.iter().flat_map(|c| c.to_dna()).collect();
     assert!(dna.chars().all(|c| "ACGT".contains(c)));
+}
+
+#[test]
+fn tmr_body_containing_tga_roundtrips() {
+    // v0.1.0 regression: codon value 56 (TGA) inside an instruction field
+    // was taken for the copy separator.
+    let cfg = EccConfig {
+        tmr: true,
+        block_size: 8,
+    };
+    let mut orig = sample_codons();
+    orig[2] = Codon::new(0x38);
+    orig[7] = Codon::new(0x38);
+    let encoded = EccEncoder::new(cfg).encode(&orig);
+    let decoded = EccDecoder::new(cfg).decode(&encoded).unwrap();
+    assert_eq!(&decoded[..orig.len()], orig.as_slice());
+}
+
+#[test]
+fn tmr_stream_with_lost_codon_is_an_error() {
+    let cfg = EccConfig {
+        tmr: true,
+        block_size: 8,
+    };
+    let mut encoded = EccEncoder::new(cfg).encode(&sample_codons());
+    encoded.remove(10);
+    assert!(EccDecoder::new(cfg).decode(&encoded).is_err());
 }
