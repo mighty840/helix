@@ -180,10 +180,7 @@ fn post1_program(cfg: EccConfig) -> (Vec<[Codon; 4]>, String) {
         .iter()
         .flat_map(|c| c.to_dna())
         .collect();
-    let instrs = raw
-        .chunks_exact(4)
-        .map(|c| <[Codon; 4]>::try_from(c).unwrap())
-        .collect();
+    let instrs = raw.as_chunks::<4>().0.to_vec();
     (instrs, dna)
 }
 

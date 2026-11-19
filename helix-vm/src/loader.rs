@@ -45,12 +45,13 @@ impl ProgramLoader {
             return Err(LoadError::UnalignedCodons);
         }
         let instructions = instr_codons
-            .chunks_exact(4)
-            .map(|chunk| {
-                let arr: [Codon; 4] = chunk.try_into().unwrap();
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|arr| {
                 // Validate each instruction decodes without error.
-                decode_instruction(&arr)?;
-                Ok(arr)
+                decode_instruction(arr)?;
+                Ok(*arr)
             })
             .collect::<Result<Vec<_>, helix_isa::DecodeError>>()?;
 

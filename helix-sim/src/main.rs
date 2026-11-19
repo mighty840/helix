@@ -62,10 +62,7 @@ fn main() -> Result<()> {
     let codons: Vec<Codon> = seq.codons().collect();
     let decoder = helix_ecc::EccDecoder::new(ecc_cfg);
     let raw = decoder.decode(&codons)?;
-    let original_instrs: Vec<[Codon; 4]> = raw
-        .chunks_exact(4)
-        .map(|c: &[Codon]| <[Codon; 4]>::try_from(c).unwrap())
-        .collect();
+    let original_instrs: Vec<[Codon; 4]> = raw.as_chunks::<4>().0.to_vec();
 
     println!(
         "Program: {} instructions, {} nt",

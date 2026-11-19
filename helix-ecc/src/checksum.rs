@@ -38,9 +38,9 @@ pub fn crc16_ccitt(data: &[u8]) -> u16 {
 /// (length a multiple of 4). Fails if any instruction does not decode.
 pub fn program_checksum(instr_codons: &[Codon]) -> Result<u16, DecodeError> {
     let mut canonical: Vec<u8> = Vec::with_capacity(instr_codons.len());
-    for chunk in instr_codons.chunks_exact(4) {
-        let arr: [Codon; 4] = [chunk[0], chunk[1], chunk[2], chunk[3]];
-        let instr = decode_instruction(&arr)?;
+    let (instructions, _) = instr_codons.as_chunks::<4>();
+    for arr in instructions {
+        let instr = decode_instruction(arr)?;
         canonical.extend(encode_instruction(&instr).iter().map(|c| c.value()));
     }
     Ok(crc16_ccitt(&canonical))

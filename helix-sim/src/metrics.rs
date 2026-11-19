@@ -100,9 +100,7 @@ fn run(instrs: &[[Codon; 4]]) -> FinalState {
 }
 
 fn to_instrs(raw: &[Codon]) -> Vec<[Codon; 4]> {
-    raw.chunks_exact(4)
-        .map(|c| <[Codon; 4]>::try_from(c).unwrap())
-        .collect()
+    raw.as_chunks::<4>().0.to_vec()
 }
 
 /// Decode `corrupted_dna` with `ecc_cfg`, run it, and compare it with running
@@ -211,10 +209,7 @@ mod tests {
         let encoded = encoder.encode(&raw);
         let dna: String = encoded.iter().flat_map(|c| c.to_dna()).collect();
 
-        let instr_arrays: Vec<[Codon; 4]> = raw
-            .chunks_exact(4)
-            .map(|c: &[Codon]| <[Codon; 4]>::try_from(c).unwrap())
-            .collect();
+        let instr_arrays: Vec<[Codon; 4]> = raw.as_chunks::<4>().0.to_vec();
 
         (instr_arrays, dna)
     }
