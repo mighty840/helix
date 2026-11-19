@@ -3,7 +3,7 @@ use clap::Parser;
 use helix_ecc::EccConfig;
 use helix_isa::{decode_instruction, Codon, DnaSequence};
 use helix_sim::inject::InjectionConfig;
-use helix_sim::metrics::simulate;
+use helix_sim::metrics::{simulate, Outcome};
 
 #[derive(Parser)]
 #[command(
@@ -31,6 +31,9 @@ struct Cli {
     /// Disable TMR
     #[arg(long)]
     no_tmr: bool,
+    /// Do not require a program checksum footer (v0.1.x strands)
+    #[arg(long)]
+    no_checksum: bool,
     /// Random seed
     #[arg(long, default_value_t = 42)]
     seed: u64,
@@ -51,6 +54,7 @@ fn main() -> Result<()> {
     let ecc_cfg = EccConfig {
         tmr: !cli.no_tmr,
         block_size: 8,
+        checksum: !cli.no_checksum,
     };
 
     // Build original instruction list by decoding with ECC.
@@ -71,6 +75,7 @@ fn main() -> Result<()> {
     println!("Running {} simulation(s)...", cli.runs);
 
     let mut total_recovery = 0.0f64;
+    let (mut correct, mut detected, mut silent) = (0usize, 0usize, 0usize);
 
     for run in 0..cli.runs {
         let seed = cli.seed.wrapping_add(run as u64);
@@ -86,16 +91,22 @@ fn main() -> Result<()> {
 
         let report = simulate(&dna, &original_instrs, inject_cfg, ecc_cfg);
         total_recovery += report.recovery_rate();
+        match report.outcome {
+            Outcome::Correct => correct += 1,
+            Outcome::Detected(_) => detected += 1,
+            Outcome::SilentWrong => silent += 1,
+        }
 
         if cli.runs == 1 {
             report.print_summary();
         } else {
             println!(
-                "Run {:3}: {} errors → {:.1}% recovery | ECC: {}",
+                "Run {:3}: {} errors → {:.1}% recovery | ECC: {} | {}",
                 run + 1,
                 report.injection.total_errors(),
                 report.recovery_rate() * 100.0,
-                if report.ecc_success { "OK" } else { "FAIL" }
+                if report.ecc_success { "OK" } else { "FAIL" },
+                report.outcome.label()
             );
         }
     }
@@ -104,6 +115,10 @@ fn main() -> Result<()> {
         println!(
             "\nAverage recovery: {:.1}%",
             total_recovery / cli.runs as f64 * 100.0
+        );
+        println!(
+            "Outcomes: {correct} correct, {detected} detected, {silent} silent wrong (of {} runs)",
+            cli.runs
         );
     }
 

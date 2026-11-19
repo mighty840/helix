@@ -20,6 +20,7 @@ fn no_tmr_encode_decode_roundtrip() {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let orig = sample_codons();
     let encoded = EccEncoder::new(cfg).encode(&orig);
@@ -32,6 +33,7 @@ fn tmr_encode_decode_roundtrip() {
     let cfg = EccConfig {
         tmr: true,
         block_size: 8,
+        checksum: true,
     };
     let orig = sample_codons();
     let encoded = EccEncoder::new(cfg).encode(&orig);
@@ -44,6 +46,7 @@ fn single_codon_flip_corrected_by_rs() {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let orig = sample_codons();
     let mut encoded = EccEncoder::new(cfg).encode(&orig);
@@ -67,6 +70,7 @@ fn tmr_one_corrupt_copy_recovered() {
     let cfg = EccConfig {
         tmr: true,
         block_size: 8,
+        checksum: true,
     };
     let orig = sample_codons();
     let mut encoded = EccEncoder::new(cfg).encode(&orig);
@@ -88,6 +92,7 @@ fn two_blocks_roundtrip() {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     // 16 instructions = 2 RS blocks
     let codons: Vec<Codon> = (0u8..16)
@@ -103,6 +108,7 @@ fn encoded_stream_is_valid_acgt() {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let orig = sample_codons();
     let encoded = EccEncoder::new(cfg).encode(&orig);
@@ -117,6 +123,7 @@ fn tmr_body_containing_tga_roundtrips() {
     let cfg = EccConfig {
         tmr: true,
         block_size: 8,
+        checksum: true,
     };
     let mut orig = sample_codons();
     orig[2] = Codon::new(0x38);
@@ -131,6 +138,7 @@ fn tmr_stream_with_lost_codon_is_an_error() {
     let cfg = EccConfig {
         tmr: true,
         block_size: 8,
+        checksum: true,
     };
     let mut encoded = EccEncoder::new(cfg).encode(&sample_codons());
     encoded.remove(10);

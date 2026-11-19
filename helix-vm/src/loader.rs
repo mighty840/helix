@@ -116,6 +116,7 @@ mod tests {
         let config = EccConfig {
             tmr: false,
             block_size: 8,
+            checksum: true,
         };
         let encoder = EccEncoder::new(config);
         let encoded_codons = encoder.encode(&raw);

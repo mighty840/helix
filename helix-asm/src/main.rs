@@ -17,6 +17,9 @@ struct Cli {
     /// Disable TMR (single copy mode)
     #[arg(long)]
     no_tmr: bool,
+    /// Omit the program checksum footer (v0.1.x format)
+    #[arg(long)]
+    no_checksum: bool,
     /// Disable bio-safety optimization
     #[arg(long)]
     no_bio: bool,
@@ -32,6 +35,7 @@ fn main() -> Result<()> {
     let config = EccConfig {
         tmr: !cli.no_tmr,
         block_size: cli.block_size,
+        checksum: !cli.no_checksum,
     };
     let asm = Assembler::new(config, !cli.no_bio);
     let out = asm.assemble(&source)?;

@@ -1,3 +1,4 @@
+use crate::checksum::{footer, program_checksum, read_footer, FOOTER_MARKER};
 use crate::reed_solomon;
 use crate::sync::{find_next_sync, sync_codons};
 use crate::tmr;
@@ -11,6 +12,9 @@ pub struct EccConfig {
     pub tmr: bool,
     /// Number of data instructions per RS block (default 8).
     pub block_size: usize,
+    /// Write a program checksum footer and require it when decoding (v0.2).
+    /// Turn off to decode v0.1.x strands, which have no footer.
+    pub checksum: bool,
 }
 
 impl Default for EccConfig {
@@ -18,6 +22,7 @@ impl Default for EccConfig {
         Self {
             tmr: true,
             block_size: 8,
+            checksum: true,
         }
     }
 }
@@ -41,6 +46,14 @@ pub enum EccError {
     Truncated,
     #[error("TMR stream of {0} codons cannot be split into 3 equal copies")]
     TmrLength(usize),
+    #[error("program checksum footer missing")]
+    ChecksumMissing,
+    #[error("program checksum footer is damaged")]
+    ChecksumFooterInvalid,
+    #[error("program checksum mismatch: stored {stored:#06x}, computed {computed:#06x}")]
+    ChecksumMismatch { stored: u16, computed: u16 },
+    #[error("decoded data is not a valid instruction stream: {0}")]
+    InvalidInstruction(#[from] helix_isa::DecodeError),
 }
 
 /// Encodes a flat stream of instruction codons into an ECC-protected codon sequence.
@@ -79,6 +92,9 @@ impl EccEncoder {
         let sync = sync_codons();
 
         let mut body: Vec<Codon> = Vec::new();
+        // The checksum covers exactly what the decoder will return: the data
+        // codons of every block, NOP padding included.
+        let mut data_stream: Vec<Codon> = Vec::new();
 
         for chunk in instr_codons.chunks(codons_per_block) {
             // SYNC marker
@@ -93,6 +109,7 @@ impl EccEncoder {
             for _ in 0..padding_instrs * 4 {
                 body.push(Codon::new(0x1B)); // NOP primary codon
             }
+            data_stream.extend_from_slice(&body[body.len() - codons_per_block..]);
 
             // RS parity: compute over the 8 opcode codon values
             let opcode_symbols: Vec<u8> = (0..instrs_per_block)
@@ -112,6 +129,12 @@ impl EccEncoder {
             body.push(Codon::new(0x00));
             body.push(Codon::new(parity[0] & 0x3F));
             body.push(Codon::new(parity[1] & 0x3F));
+        }
+
+        if self.config.checksum {
+            let crc =
+                program_checksum(&data_stream).expect("encoder input must be valid instructions");
+            body.extend_from_slice(&footer(crc));
         }
 
         if self.config.tmr {
@@ -149,8 +172,16 @@ impl EccDecoder {
 
         let mut output: Vec<Codon> = Vec::new();
         let mut pos = 0usize;
+        let mut stored_crc: Option<u16> = None;
 
         while pos < body.len() {
+            // A footer is the last 4 codons and starts with TAA (48), which no
+            // instruction or SYNC marker can start with.
+            if body.len() - pos == 4 && body[pos].value() == FOOTER_MARKER {
+                stored_crc =
+                    Some(read_footer(&body[pos..]).ok_or(EccError::ChecksumFooterInvalid)?);
+                break;
+            }
             // Find SYNC at or after pos.
             let sync_pos = find_next_sync(&body, pos).ok_or(EccError::SyncMissing)?;
             pos = sync_pos + 4; // skip SYNC
@@ -198,6 +229,14 @@ impl EccDecoder {
             pos += data_codons_per_block + 4; // skip data + ECCP
         }
 
+        if self.config.checksum {
+            let stored = stored_crc.ok_or(EccError::ChecksumMissing)?;
+            let computed = program_checksum(&output)?;
+            if stored != computed {
+                return Err(EccError::ChecksumMismatch { stored, computed });
+            }
+        }
+
         Ok(output)
     }
 }
@@ -222,6 +261,7 @@ mod tests {
         let config = EccConfig {
             tmr: false,
             block_size: 8,
+            checksum: true,
         };
         let encoder = EccEncoder::new(config);
         let decoder = EccDecoder::new(config);
@@ -239,6 +279,7 @@ mod tests {
         let config = EccConfig {
             tmr: true,
             block_size: 8,
+            checksum: true,
         };
         let encoder = EccEncoder::new(config);
         let decoder = EccDecoder::new(config);

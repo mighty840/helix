@@ -48,12 +48,13 @@ result
 | Registers | R0–R7 (R0 hardwired zero) |
 | ISA | 32 opcodes: arithmetic, logic, memory, branch, call/ret |
 
-### Error Correction (4 layers)
+### Error Correction (5 layers)
 
 1. **Codon degeneracy** — opcodes 0x00–0x0F have synonymous codons
 2. **SYNC markers** — 4-codon pattern inserted every 8 instructions for frame sync
 3. **Reed-Solomon** — RS(10,8) over GF(2⁶) on the opcode codon of each instruction; corrects 1 wrong opcode codon per block of 8 instructions (operand codons are protected only by TMR)
 4. **TMR** — Triple Modular Redundancy: three copies back to back, split by length, majority vote per codon
+5. **Program checksum** (v0.2) — a CRC-16 footer over the program's canonical form, so a change that alters the program is refused instead of run. Strands from v0.1.x have no footer: read them with `--no-checksum`
 
 ### Bio-Safety Constraints
 
@@ -83,7 +84,8 @@ cargo run --bin helix-vm -- \
 cargo run --bin helix-vm -- --trace \
   "$(cargo run --bin helix-asm -- examples/gcd.hx 2>/dev/null)"
 
-# Simulate DNA storage errors
+# Simulate DNA storage errors (each run is judged by executing the program:
+# correct, detected, or silent wrong)
 cargo run --bin helix-sim -- \
   "$(cargo run --bin helix-asm -- examples/gcd.hx 2>/dev/null)" \
   --sub-rate 0.005 --runs 50

@@ -6,6 +6,7 @@ fn assemble_and_run(src: &str) -> Cpu {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let asm = Assembler::new(cfg, false);
     let out = asm.assemble(src).unwrap();
@@ -107,6 +108,7 @@ fn dna_output_is_valid_acgt() {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let asm = Assembler::new(cfg, true); // bio optimization on
     let out = asm.assemble(FIBONACCI).unwrap();
@@ -120,6 +122,7 @@ fn data_section_preloaded_into_memory() {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let asm = Assembler::new(cfg, false);
     let out = asm.assemble(SUM_ARRAY).unwrap();
@@ -148,6 +151,7 @@ fn full_ecc_pipeline_roundtrip() {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let asm = Assembler::new(cfg, false);
     let out = asm.assemble(GCD_PROGRAM).unwrap();

@@ -384,7 +384,7 @@ pre{margin:0;white-space:pre;overflow-x:auto}
     </section>
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">The Pipeline</h2><span class="sec-num">§ 1.1</span></div>
-      <div class="ecc-layers"><h5>4 ECC Layers</h5><div class="ecc-layer-item">1. <span>synonyms</span> (codon degeneracy)</div><div class="ecc-layer-item">2. <span>SYNC</span> markers (frame sync)</div><div class="ecc-layer-item">3. <span>Reed-Solomon</span> RS(10,8)</div><div class="ecc-layer-item">4. <span>TMR</span> majority vote</div></div>
+      <div class="ecc-layers"><h5>5 ECC Layers</h5><div class="ecc-layer-item">1. <span>synonyms</span> (codon degeneracy)</div><div class="ecc-layer-item">2. <span>SYNC</span> markers (frame sync)</div><div class="ecc-layer-item">3. <span>Reed-Solomon</span> RS(10,8)</div><div class="ecc-layer-item">4. <span>TMR</span> majority vote</div><div class="ecc-layer-item">5. <span>checksum</span> CRC-16 footer (v0.2)</div></div>
       <div class="pipeline-wrap">
         <svg viewBox="0 0 600 210" width="100%" style="max-width:600px" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -1044,7 +1044,7 @@ println!(<span class="cs">"R1 = {}, R7 = {}"</span>, cpu.regs[<span class="cn">1
     <section class="doc-section">
       <div class="sec-head"><h2 class="sec-title">What is helix-sim?</h2><span class="sec-num">§ 13.1</span></div>
       <div class="body-text">
-        <p><code>helix-sim</code> is a chaos / fault-injection harness. It simulates the DNA storage medium by randomly mutating a <code>DnaSequence</code> according to a configurable error model, decodes it, and counts how many decoded instructions equal the originals. It does not execute the program.</p>
+        <p><code>helix-sim</code> is a chaos / fault-injection harness. It simulates the DNA storage medium by randomly mutating a <code>DnaSequence</code> according to a configurable error model, decodes it, and counts how many decoded instructions equal the originals. Since v0.2 it also runs the recovered program and compares its final registers and memory with the original's, so each run is <strong>correct</strong>, <strong>detected</strong> (a visible failure) or <strong>silent wrong</strong>.</p>
       </div>
     </section>
     <section class="doc-section">
@@ -1067,8 +1067,9 @@ println!(<span class="cs">"R1 = {}, R7 = {}"</span>, cpu.regs[<span class="cn">1
 <span class="cc">// 1% substitutions, no deletions or insertions, seed 42</span>
 <span class="ck">let</span> inject = InjectionConfig::composite(<span class="cn">0.01</span>, <span class="cn">0.0</span>, <span class="cn">0.0</span>, <span class="cn">42</span>);
 <span class="ck">let</span> report = simulate(&amp;dna, &amp;original_instrs, inject, EccConfig::default());
-<span class="cc">// compares decoded instructions with the originals (does not execute)</span>
-println!(<span class="cs">"{:.1}% recovered"</span>, report.recovery_rate() * <span class="cn">100.0</span>);</pre></div>
+<span class="cc">// recovered instructions, and the outcome from running the program (v0.2)</span>
+println!(<span class="cs">"{:.1}% recovered"</span>, report.recovery_rate() * <span class="cn">100.0</span>);
+println!(<span class="cs">"outcome: {}"</span>, report.outcome.label()); <span class="cc">// correct / detected / SILENT WRONG</span></pre></div>
       <div class="callout tip">The rates are simulation parameters, not measured DNA error rates. Use <code>--runs N</code> to average over seeds (run <em>n</em> uses seed + <em>n</em>), e.g. <code>helix-sim gcd.dna --sub-rate 0.01 --del-rate 0 --ins-rate 0 --runs 200</code>.</div>
     </section>
   </div>

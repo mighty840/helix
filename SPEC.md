@@ -1,13 +1,14 @@
 # Helix — DNA-Encoded Instruction Set Architecture
 
-> **Status (v0.1.1).** This document is the design. Everything in the repository
-> runs in software: no sequence has been synthesized, stored or sequenced, and
-> storage errors exist only as `helix-sim` injections. Implemented in v0.1.1:
+> **Status (unreleased v0.2, branch `v0.2-checksum`).** This document is the
+> design. Everything in the repository runs in software: no sequence has been
+> synthesized, stored or sequenced, and storage errors exist only as
+> `helix-sim` injections. Implemented:
 > the ISA and codon mapping (sections 2 to 4), the GC, homopolymer, dinucleotide
 > repeat and palindrome checks with synonymous-codon swaps (5.2, partly 5.3),
 > SYNC markers, Reed-Solomon over opcode codons and TMR (section 6), the
-> assembler and the VM. Planned, not implemented: the strand header, footer,
-> CRC and PCR primers (section 7), output formats other than a raw DNA string
+> program checksum footer (7.4), the assembler and the VM. Planned, not
+> implemented: the strand header and PCR primers (section 7), output formats other than a raw DNA string
 > (8.3), the melting-temperature and inverted-repeat checks and NOP spacers
 > (5.2, 5.3), the `--profile cell` rules (5.5), and the wet-lab steps of the
 > walkthrough (section 13). Known gap: SYNC search runs at codon-aligned
@@ -17,6 +18,11 @@
 > the DNA as a loader prologue (8.2); TMR copies are stored back to back and
 > split by length instead of by a `TGA` separator, which could also occur
 > inside instructions (6.2, layer 4); v0.1.0 strands still decode.
+>
+> Changed in v0.2: a CRC-16 checksum footer over the program's canonical form
+> (7.4), on by default; `--no-checksum` writes and reads v0.1.x strands, which
+> are then byte-identical to v0.1.1 output. `helix-sim` judges each run by
+> executing the recovered program (10.2).
 
 ## 1. Overview
 
@@ -484,14 +490,27 @@ Sequence of instruction blocks, each structured as:
 
 A short last block is padded with NOPs to 8 instructions.
 
-If TMR is enabled, the body is repeated 3 times with TGA separators.
+If TMR is enabled, the body (footer included) is repeated 3 times, back to back.
 
-### 7.4 Footer (4 codons = 24 nucleotides)
+### 7.4 Footer (4 codons = 12 nucleotides)
 
-| Field             | Codons | Description                           |
-|-------------------|--------|---------------------------------------|
-| Program checksum  | 2      | CRC-12 over all body codons           |
-| End marker        | 2      | TAA + padding                         |
+Implemented in v0.2 (`helix-ecc/src/checksum.rs`). The footer follows the last
+block, inside the body, so TMR stores and votes it like the rest:
+
+| Field             | Codons | Description                                    |
+|-------------------|--------|------------------------------------------------|
+| End marker        | 1      | `TAA` (48), which no instruction starts with   |
+| Program checksum  | 3      | CRC-16/CCITT-FALSE, split 4 + 6 + 6 bits       |
+
+The CRC covers the decoded data of every block (NOP padding included) in
+canonical form: each instruction is decoded and re-encoded with its primary
+opcode codon and zeroed padding. A change the decoder ignores anyway (padding
+bits, unused fields, a synonymous opcode codon) keeps the checksum valid; a
+change to what the program means fails it, apart from a 1 in 65,536 chance of
+a collision for a random change. On post 1's program with one copy, all 396
+one-letter changes give no silent wrong program (`helix-sim/tests/e2e.rs`).
+The CRC is the one ferrite-sdk uses for its chunks (polynomial 0x1021, initial
+value 0xFFFF).
 
 ### 7.5 Primers
 
@@ -689,12 +708,19 @@ testing the decoder's error correction.
 
 ### 10.2 Metrics
 
-After decoding an error-injected sequence, the simulator reports:
+After decoding an error-injected sequence, the simulator reports (v0.2):
 
-- Instructions correctly recovered vs. corrupted
-- Blocks recovered by RS vs. blocks recovered by TMR vs. unrecoverable
-- SYNC re-alignment events
-- Overall program integrity (pass/fail)
+- Instructions recovered by ECC, compared with the originals, with the
+  checksum ignored (comparable to v0.1.x numbers)
+- The outcome, judged by running the program: **correct** (the recovered
+  program ends in the same registers, memory and exit as the original),
+  **detected** (decoding, the checksum, loading or running fails visibly), or
+  **silent wrong** (it runs and ends differently, with no error)
+- With `--runs N`, the average instruction recovery and the count of each
+  outcome
+
+Planned, not implemented: blocks recovered by RS vs. TMR, and SYNC
+re-alignment events.
 
 ---
 
@@ -778,18 +804,19 @@ helix/
 ### Input: bubble_sort.hx
 (See Section 8.1 for source)
 
-### Step 1: Assemble (v0.1.1, real output)
+### Step 1: Assemble (v0.2, real output)
 ```
 $ helix-asm examples/gcd.hx -o gcd.dna
 [ASM] program: gcd
 [ASM] instructions: 9
-[ASM] DNA length: 720 nt
+[ASM] DNA length: 756 nt
 [ASM] bio swaps: 5, violations remaining: 8
 ```
 
-720 nt = 3 TMR copies × 2 blocks (one padded with NOPs) × 40 codons × 3 nt.
+756 nt = 3 TMR copies × (2 blocks (one padded with NOPs) × 40 codons + a
+4-codon checksum footer) × 3 nt.
 
-### Step 2: Execute (v0.1.1, real output)
+### Step 2: Execute (v0.2, real output)
 ```
 $ helix-vm gcd.dna
 [LOAD] 16 instructions, entry=0
@@ -798,23 +825,25 @@ $ helix-vm gcd.dna
 [EXIT] OK
 ```
 
-### Step 3: Simulated error test (v0.1.1, real output)
+### Step 3: Simulated error test (v0.2, real output)
 ```
 $ helix-sim gcd.dna
-Program: 16 instructions, 720 nt
+Program: 16 instructions, 756 nt
 Running 1 simulation(s)...
 === Simulation Report ===
-Original:  720 nt
-Corrupted: 719 nt
+Original:  756 nt
+Corrupted: 755 nt
 Errors:    1 subs, 1 dels, 0 ins (total: 2)
 Recovery:  0/16 instructions (0.0%)
 ECC ok:    false
 Output match: false
+Outcome:   detected (ECC: TMR stream of 251 codons cannot be split into 3 equal copies)
 ```
 
 With the default seed (42) this run includes one deletion, which v0.1.x cannot
-re-frame (see the status note at the top). "Recovery" and "Output match"
-compare decoded instructions with the originals; the program is not executed.
+re-frame (see the status note at the top), and the failure is reported, not
+silent. "Recovery" compares decoded instructions with the originals; "Output
+match" and "Outcome" come from running the recovered program (10.2).
 
 ### Planned steps (not done)
 Export to a vendor format (FASTA), synthesis, storage (silica encapsulation,

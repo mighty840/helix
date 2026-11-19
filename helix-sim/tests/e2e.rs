@@ -38,6 +38,7 @@ fn zero_error_rate_perfect_recovery() {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let (instrs, dna) = assemble(FIBONACCI, cfg);
     let report = simulate(
@@ -56,6 +57,7 @@ fn very_low_error_rate_high_recovery_no_tmr() {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let (instrs, dna) = assemble(FIBONACCI, cfg);
     let report = simulate(
@@ -77,10 +79,12 @@ fn tmr_improves_recovery_over_single_copy() {
     let cfg_tmr = EccConfig {
         tmr: true,
         block_size: 8,
+        checksum: true,
     };
     let cfg_no = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let (instrs_tmr, dna_tmr) = assemble(FIBONACCI, cfg_tmr);
     let (instrs_no, dna_no) = assemble(FIBONACCI, cfg_no);
@@ -109,6 +113,7 @@ fn assemble_execute_fibonacci_gives_correct_result() {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let asm = Assembler::new(cfg, false);
     let out = asm.assemble(FIBONACCI).unwrap();
@@ -126,6 +131,7 @@ fn burst_mode_simulation_runs() {
     let cfg = EccConfig {
         tmr: true,
         block_size: 8,
+        checksum: true,
     };
     let (instrs, dna) = assemble(FIBONACCI, cfg);
     // Burst mode with very low error rate
@@ -141,6 +147,7 @@ fn multi_run_simulation_consistent() {
     let cfg = EccConfig {
         tmr: false,
         block_size: 8,
+        checksum: true,
     };
     let (instrs, dna) = assemble(FIBONACCI, cfg);
     // Same seed → same result
@@ -151,4 +158,85 @@ fn multi_run_simulation_consistent() {
         r1.injection.substitutions, r2.injection.substitutions,
         "Same seed must produce same injection"
     );
+}
+
+// ── v0.2: every one-letter change, judged by running the program ──
+
+/// Post 1's program (IMML R1, 7; IMML R2, 3; ADD R3, R1, R2; HALT) with ECC,
+/// one copy. Returns the instructions and the DNA.
+fn post1_program(cfg: EccConfig) -> (Vec<[Codon; 4]>, String) {
+    use helix_isa::{encode_instruction, Instruction, Register::*};
+    let raw: Vec<Codon> = [
+        Instruction::Imml(R1, 7),
+        Instruction::Imml(R2, 3),
+        Instruction::Add(R3, R1, R2),
+        Instruction::Halt,
+    ]
+    .iter()
+    .flat_map(encode_instruction)
+    .collect();
+    let dna: String = helix_ecc::EccEncoder::new(cfg)
+        .encode(&raw)
+        .iter()
+        .flat_map(|c| c.to_dna())
+        .collect();
+    let instrs = raw
+        .chunks_exact(4)
+        .map(|c| <[Codon; 4]>::try_from(c).unwrap())
+        .collect();
+    (instrs, dna)
+}
+
+/// Counts of (correct, detected, silent wrong) over all one-letter changes.
+fn every_one_letter_change(cfg: EccConfig) -> (usize, usize, usize) {
+    use helix_sim::metrics::{evaluate, Outcome};
+    let (instrs, dna) = post1_program(cfg);
+    let (mut correct, mut detected, mut silent) = (0, 0, 0);
+    for pos in 0..dna.len() {
+        for letter in ['A', 'C', 'G', 'T'] {
+            let mut v: Vec<char> = dna.chars().collect();
+            if v[pos] == letter {
+                continue;
+            }
+            v[pos] = letter;
+            match evaluate(&v.into_iter().collect::<String>(), &instrs, cfg).0 {
+                Outcome::Correct => correct += 1,
+                Outcome::Detected(_) => detected += 1,
+                Outcome::SilentWrong => silent += 1,
+            }
+        }
+    }
+    (correct, detected, silent)
+}
+
+#[test]
+fn checksum_leaves_no_silent_wrong_answer_for_any_one_letter_change() {
+    let with = EccConfig {
+        tmr: false,
+        block_size: 8,
+        checksum: true,
+    };
+    let without = EccConfig {
+        checksum: false,
+        ..with
+    };
+    let (c1, d1, s1) = every_one_letter_change(with);
+    let (c0, d0, s0) = every_one_letter_change(without);
+    println!("one copy, checksum on:  {c1} correct, {d1} detected, {s1} silent wrong");
+    println!("one copy, checksum off: {c0} correct, {d0} detected, {s0} silent wrong");
+    assert_eq!(
+        s1, 0,
+        "checksum must catch every one-letter change that alters the program"
+    );
+    assert!(
+        s0 > 0,
+        "without the checksum some operand changes go through silently"
+    );
+}
+
+#[test]
+fn three_copies_correct_every_one_letter_change() {
+    let (c, d, s) = every_one_letter_change(EccConfig::default());
+    println!("three copies, checksum on: {c} correct, {d} detected, {s} silent wrong");
+    assert_eq!((d, s), (0, 0));
 }

@@ -15,6 +15,9 @@ struct Cli {
     /// Disable TMR (single copy mode)
     #[arg(long)]
     no_tmr: bool,
+    /// Do not require a program checksum footer (decode v0.1.x strands)
+    #[arg(long)]
+    no_checksum: bool,
     /// RS block size (default 8)
     #[arg(long, default_value_t = 8)]
     block_size: usize,
@@ -32,6 +35,7 @@ fn main() -> Result<()> {
     let config = EccConfig {
         tmr: !cli.no_tmr,
         block_size: cli.block_size,
+        checksum: !cli.no_checksum,
     };
 
     let loader = ProgramLoader::new(config);

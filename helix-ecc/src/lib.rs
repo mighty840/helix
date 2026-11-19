@@ -1,3 +1,4 @@
+pub mod checksum;
 pub mod pipeline;
 pub mod reed_solomon;
 pub mod sync;
