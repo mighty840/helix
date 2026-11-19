@@ -1,6 +1,6 @@
 # Helix — DNA-Encoded Instruction Set Architecture
 
-> **Status (unreleased v0.2, branch `v0.2-checksum`).** This document is the
+> **Status (v0.2.0).** This document is the
 > design. Everything in the repository runs in software: no sequence has been
 > synthesized, stored or sequenced, and storage errors exist only as
 > `helix-sim` injections. Implemented:
